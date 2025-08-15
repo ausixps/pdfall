@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Text Converter - PDF Pro Suite</title>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #00ff88;
+        }
+        
+        .back-btn {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+        
+        .main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 50px);
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: #141414;
+            border-right: 1px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .upload-section {
+            margin-bottom: 30px;
+        }
+        
+        .upload-box {
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #1a1a1a;
+            transition: all 0.3s;
+        }
+        
+        .upload-box:hover {
+            border-color: #00ff88;
+            background: #1e1e1e;
+        }
+        
+        .upload-box.dragover {
+            border-color: #00ff88;
+            background: #002a1a;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.7;
+        }
+        
+        .viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+        }
+        
+        .controls {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+            background: #222;
+        }
+        
+        .text-editor {
+            flex: 1;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ffffff;
+            resize: none;
+            outline: none;
+        }
+        
+        .extraction-options {
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #333;
+            border-color: #555;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary { 
+            background: #00ff88; 
+            color: #000; 
+            border-color: #00ff88;
+        }
+        
+        .btn-primary:hover { 
+            background: #00cc70;
+            border-color: #00cc70;
+        }
+        
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            background: #222;
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: #ccc;
+        }
+        
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+        }
+        
+        .placeholder h3 {
+            margin-bottom: 10px;
+            color: #999;
+            font-size: 24px;
+        }
+        
+        .placeholder p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #00ff88;
+            color: #000;
+        }
+        
+        .toast.error {
+            background: #ff4757;
+        }
+        
+        .toast.info {
+            background: #3742fa;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #00ff88;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #00ff88;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .word-count {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📄 PDF to Text Converter</h1>
+        <a href="index.html" class="back-btn">← Back to Tools</a>
+    </header>
+
+    <main class="main">
+        <div class="sidebar">
+            <div class="upload-section">
+                <div class="section-title">Upload PDF File</div>
+                <div class="upload-box" id="uploadBox">
+                    <span class="upload-icon">📄</span>
+                    <div>Drop PDF here or click to browse</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">Maximum file size: 100MB</div>
+                </div>
+                <input type="file" id="pdfInput" accept=".pdf" style="display: none">
+            </div>
+
+            <div class="extraction-options" id="extractionOptions" style="display: none;">
+                <div class="section-title">PDF Information</div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalPages">0</div>
+                        <div class="stat-label">Pages</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalChars">0</div>
+                        <div class="stat-label">Characters</div>
+                    </div>
+                </div>
+
+                <div class="progress-bar" id="progressContainer" style="display: none;">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="extractBtn" style="flex: 1;">Extract Text</button>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn" id="copyBtn" style="flex: 1;" disabled>Copy Text</button>
+                    <button class="btn" id="downloadBtn" style="flex: 1;" disabled>Download TXT</button>
+                </div>
+
+                <div class="word-count" id="wordCount">
+                    Words: 0 | Lines: 0
+                </div>
+            </div>
+        </div>
+
+        <div class="viewer">
+            <div class="controls" id="controls" style="display: none;">
+                <div id="previewInfo" style="color: #ccc; font-size: 14px;">PDF loaded successfully</div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-small" id="selectAllText">Select All</button>
+                    <button class="btn btn-small" id="clearText">Clear</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="placeholder" id="placeholder">
+                    <h3>📄 PDF to Text</h3>
+                    <p>Upload a PDF file to extract all text content</p>
+                    <div style="font-size: 14px; color: #777; margin-top: 20px;">
+                        ✅ Fast text extraction<br>
+                        ✅ Preserves line breaks<br>
+                        ✅ Copy or download results<br>
+                        ✅ Works with all PDF types
+                    </div>
+                </div>
+                <div class="loading" id="loading">
+                    <div>Extracting text from PDF...</div>
+                </div>
+                <textarea class="text-editor" id="textEditor" placeholder="Extracted text will appear here..." style="display: none;"></textarea>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        class PDFToTextConverter {
+            constructor() {
+                this.pdfDoc = null;
+                this.totalPages = 0;
+                this.extractedText = '';
+
+                this.uploadBox = document.getElementById('uploadBox');
+                this.pdfInput = document.getElementById('pdfInput');
+                this.extractionOptions = document.getElementById('extractionOptions');
+                this.controls = document.getElementById('controls');
+                this.placeholder = document.getElementById('placeholder');
+                this.loading = document.getElementById('loading');
+                this.textEditor = document.getElementById('textEditor');
+
+                this.setupEvents();
+            }
+
+            setupEvents() {
+                this.uploadBox.addEventListener('click', () => this.pdfInput.click());
+                this.pdfInput.addEventListener('change', (e) => this.loadPDF(e.target.files[0]));
+
+                this.setupDragDrop();
+
+                document.getElementById('extractBtn').addEventListener('click', () => this.extractText());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyText());
+                document.getElementById('downloadBtn').addEventListener('click', () => this.downloadText());
+                document.getElementById('selectAllText').addEventListener('click', () => this.selectAllText());
+                document.getElementById('clearText').addEventListener('click', () => this.clearText());
+
+                this.textEditor.addEventListener('input', () => this.updateWordCount());
+            }
+
+            setupDragDrop() {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    document.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+
+                this.uploadBox.addEventListener('dragover', () => {
+                    this.uploadBox.classList.add('dragover');
+                });
+
+                this.uploadBox.addEventListener('dragleave', () => {
+                    this.uploadBox.classList.remove('dragover');
+                });
+
+                this.uploadBox.addEventListener('drop', (e) => {
+                    this.uploadBox.classList.remove('dragover');
+                    const files = Array.from(e.dataTransfer.files);
+                    const pdfFile = files.find(f => f.type === 'application/pdf');
+                    if (pdfFile) this.loadPDF(pdfFile);
+                });
+            }
+
+            async loadPDF(file) {
+                if (!file || file.type !== 'application/pdf') {
+                    this.showToast('Please select a valid PDF file', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Loading PDF...', 'info');
+                    this.placeholder.style.display = 'none';
+                    this.loading.style.display = 'block';
+
+                    const arrayBuffer = await file.arrayBuffer();
+                    const typedArray = new Uint8Array(arrayBuffer);
+                    this.pdfDoc = await pdfjsLib.getDocument({
+                        data: typedArray,
+                        cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+                        cMapPacked: true
+                    }).promise;
+                    
+                    this.totalPages = this.pdfDoc.numPages;
+
+                    this.updateUI();
+
+                    this.loading.style.display = 'none';
+                    this.textEditor.style.display = 'block';
+                    this.controls.style.display = 'flex';
+                    this.extractionOptions.style.display = 'block';
+
+                    this.showToast(`PDF loaded: ${this.totalPages} pages`, 'success');
+                } catch (error) {
+                    console.error('PDF loading error:', error);
+                    this.showToast('Failed to load PDF', 'error');
+                    this.loading.style.display = 'none';
+                    this.placeholder.style.display = 'block';
+                }
+            }
+
+            async extractText() {
+                if (!this.pdfDoc) {
+                    this.showToast('Please load a PDF file first', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Extracting text...', 'info');
+                    document.getElementById('extractBtn').disabled = true;
+                    
+                    const progressContainer = document.getElementById('progressContainer');
+                    const progressFill = document.getElementById('progressFill');
+                    progressContainer.style.display = 'block';
+
+                    let fullText = '';
+
+                    for (let i = 1; i <= this.totalPages; i++) {
+                        // Update progress
+                        const progress = (i / this.totalPages) * 100;
+                        progressFill.style.width = progress + '%';
+
+                        const pageText = await this.extractPageText(i);
+                        fullText += `--- Page ${i} ---\n\n${pageText}\n\n`;
+                    }
+
+                    this.extractedText = fullText;
+                    this.textEditor.value = fullText;
+                    this.updateWordCount();
+
+                    progressContainer.style.display = 'none';
+                    document.getElementById('extractBtn').disabled = false;
+                    document.getElementById('copyBtn').disabled = false;
+                    document.getElementById('downloadBtn').disabled = false;
+
+                    this.showToast(`Successfully extracted text from ${this.totalPages} pages`, 'success');
+                } catch (error) {
+                    console.error('Extraction error:', error);
+                    this.showToast('Failed to extract text', 'error');
+                    document.getElementById('extractBtn').disabled = false;
+                    document.getElementById('progressContainer').style.display = 'none';
+                }
+            }
+
+            async extractPageText(pageNum) {
+                try {
+                    const page = await this.pdfDoc.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    
+                    let text = '';
+                    let lastY = null;
+
+                    for (const item of textContent.items) {
+                        if (item.str) {
+                            // Add line break if Y coordinate changed significantly
+                            if (lastY !== null && Math.abs(lastY - item.transform[5]) > 5) {
+                                text += '\n';
+                            }
+                            text += item.str + ' ';
+                            lastY = item.transform[5];
+                        }
+                    }
+                    
+                    return text.trim();
+                } catch (error) {
+                    console.error(`Error extracting text from page ${pageNum}:`, error);
+                    return `[Error extracting text from page ${pageNum}]`;
+                }
+            }
+
+            copyText() {
+                if (!this.textEditor.value) {
+                    this.showToast('No text to copy', 'error');
+                    return;
+                }
+
+                this.textEditor.select();
+                document.execCommand('copy');
+                this.showToast('Text copied to clipboard', 'success');
+            }
+
+            downloadText() {
+                if (!this.textEditor.value) {
+                    this.showToast('No text to download', 'error');
+                    return;
+                }
+
+                const blob = new Blob([this.textEditor.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'extracted-text.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                this.showToast('Text file downloaded', 'success');
+            }
+
+            selectAllText() {
+                this.textEditor.select();
+            }
+
+            clearText() {
+                this.textEditor.value = '';
+                this.updateWordCount();
+                document.getElementById('copyBtn').disabled = true;
+                document.getElementById('downloadBtn').disabled = true;
+            }
+
+            updateWordCount() {
+                const text = this.textEditor.value;
+                const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+                const lines = text.split('\n').length;
+                const chars = text.length;
+
+                document.getElementById('wordCount').textContent = `Words: ${words} | Lines: ${lines}`;
+                document.getElementById('totalChars').textContent = chars.toLocaleString();
+            }
+
+            updateUI() {
+                document.getElementById('totalPages').textContent = this.totalPages;
+                document.getElementById('previewInfo').textContent = `PDF loaded: ${this.totalPages} pages`;
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the converter
+        document.addEventListener('DOMContentLoaded', () => {
+            new PDFToTextConverter();
+        });
+    </script>
+</body>
+</html>

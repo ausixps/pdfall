@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Compare - PDF Pro Suite</title>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #00ff88;
+        }
+        
+        .back-btn {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+        
+        .main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 50px);
+        }
+        
+        .sidebar {
+            width: 350px;
+            background: #141414;
+            border-right: 1px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .upload-section {
+            margin-bottom: 25px;
+        }
+        
+        .upload-box {
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 25px 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #1a1a1a;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .upload-box:hover {
+            border-color: #00ff88;
+            background: #1e1e1e;
+        }
+        
+        .upload-box.dragover {
+            border-color: #00ff88;
+            background: #002a1a;
+        }
+        
+        .upload-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            display: block;
+            opacity: 0.7;
+        }
+        
+        .viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+        }
+        
+        .controls {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: auto;
+            background: #222;
+        }
+        
+        .comparison-panel {
+            flex: 1;
+            padding: 20px;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .comparison-panel:last-child {
+            border-right: none;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #00ff88;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .pdf-canvas {
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: white;
+            margin-bottom: 15px;
+        }
+        
+        .page-navigation {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .page-input {
+            width: 60px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: white;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .compare-tools {
+            margin-top: 20px;
+        }
+        
+        .tool-group {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .tool-title {
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #00ff88;
+            font-size: 14px;
+        }
+        
+        .tool-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #333;
+            border-color: #555;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary { 
+            background: #00ff88; 
+            color: #000; 
+            border-color: #00ff88;
+        }
+        
+        .btn-primary:hover { 
+            background: #00cc70;
+            border-color: #00cc70;
+        }
+        
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+        
+        .btn-active {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            background: #222;
+            padding: 8px 10px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-number {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #999;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: #ccc;
+        }
+        
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+        }
+        
+        .placeholder h3 {
+            margin-bottom: 10px;
+            color: #999;
+            font-size: 24px;
+        }
+        
+        .placeholder p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #00ff88;
+            color: #000;
+        }
+        
+        .toast.error {
+            background: #ff4757;
+        }
+        
+        .toast.info {
+            background: #3742fa;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #00ff88;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        
+        .differences-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .difference-item {
+            background: #222;
+            border-left: 3px solid #ffa500;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 0 4px 4px 0;
+            font-size: 12px;
+        }
+        
+        .difference-item.added {
+            border-left-color: #00ff88;
+            background: #001a0d;
+        }
+        
+        .difference-item.removed {
+            border-left-color: #ff4757;
+            background: #1a0d0d;
+        }
+        
+        .difference-item.modified {
+            border-left-color: #ffa500;
+            background: #1a1500;
+        }
+        
+        .compare-mode {
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 8px;
+            color: white;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .file-info {
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 11px;
+        }
+        
+        .file-name {
+            color: #00ff88;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .file-details {
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🔍 PDF Compare</h1>
+        <a href="index.html" class="back-btn">← Back to Tools</a>
+    </header>
+
+    <main class="main">
+        <div class="sidebar">
+            <div class="upload-section">
+                <div class="section-title">Upload First PDF</div>
+                <div class="upload-box" id="uploadBox1">
+                    <span class="upload-icon">📄</span>
+                    <div>Drop first PDF here</div>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">Original document</div>
+                </div>
+                <input type="file" id="pdfInput1" accept=".pdf" style="display: none">
+                <div class="file-info" id="fileInfo1" style="display: none;">
+                    <div class="file-name" id="fileName1"></div>
+                    <div class="file-details" id="fileDetails1"></div>
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <div class="section-title">Upload Second PDF</div>
+                <div class="upload-box" id="uploadBox2">
+                    <span class="upload-icon">📄</span>
+                    <div>Drop second PDF here</div>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">Document to compare</div>
+                </div>
+                <input type="file" id="pdfInput2" accept=".pdf" style="display: none">
+                <div class="file-info" id="fileInfo2" style="display: none;">
+                    <div class="file-name" id="fileName2"></div>
+                    <div class="file-details" id="fileDetails2"></div>
+                </div>
+            </div>
+
+            <div class="compare-tools" id="compareTools" style="display: none;">
+                <div class="section-title">Comparison Settings</div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="pages1">0</div>
+                        <div class="stat-label">Pages 1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="pages2">0</div>
+                        <div class="stat-label">Pages 2</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="differences">0</div>
+                        <div class="stat-label">Differences</div>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <div class="tool-title">🔍 Compare Mode</div>
+                    <select class="compare-mode" id="compareMode">
+                        <option value="text">Text Content</option>
+                        <option value="visual">Visual Differences</option>
+                        <option value="structure">Page Structure</option>
+                        <option value="metadata">Document Metadata</option>
+                    </select>
+                </div>
+
+                <div class="tool-group">
+                    <div class="tool-title">📊 Analysis</div>
+                    <div class="tool-buttons">
+                        <button class="btn btn-primary" id="compareBtn" style="width: 100%;">Start Comparison</button>
+                    </div>
+                    <div class="tool-buttons" style="margin-top: 8px;">
+                        <button class="btn btn-small" id="exportResultsBtn" disabled>Export Results</button>
+                        <button class="btn btn-small" id="resetComparisonBtn">Reset</button>
+                    </div>
+                </div>
+
+                <div class="differences-panel" id="differencesPanel" style="display: none;">
+                    <div class="tool-title">📝 Differences Found</div>
+                    <div id="differencesList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="viewer">
+            <div class="controls" id="controls" style="display: none;">
+                <div class="page-navigation">
+                    <button class="btn btn-small" id="prevPageBtn" disabled>← Previous</button>
+                    <span style="font-size: 14px;">Page</span>
+                    <input type="number" class="page-input" id="pageInput" value="1" min="1">
+                    <span style="font-size: 14px;" id="pageTotal">of 1</span>
+                    <button class="btn btn-small" id="nextPageBtn" disabled>Next →</button>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-small" id="zoomOutBtn">Zoom Out</button>
+                    <span style="font-size: 14px;" id="zoomLevel">100%</span>
+                    <button class="btn btn-small" id="zoomInBtn">Zoom In</button>
+                    <button class="btn btn-small" id="syncPagesBtn">Sync Pages</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="placeholder" id="placeholder">
+                    <h3>🔍 PDF Compare</h3>
+                    <p>Upload two PDF files to compare content, structure, and differences</p>
+                    <div style="font-size: 14px; color: #777; margin-top: 20px;">
+                        ✅ Text content comparison<br>
+                        ✅ Visual difference detection<br>
+                        ✅ Page structure analysis<br>
+                        ✅ Metadata comparison<br>
+                        ✅ Side-by-side viewing
+                    </div>
+                </div>
+                <div class="loading" id="loading">
+                    <div>Comparing PDF documents...</div>
+                </div>
+                <div class="comparison-panel" id="panel1" style="display: none;">
+                    <div class="panel-title" id="panelTitle1">Original PDF</div>
+                    <canvas id="pdfCanvas1" class="pdf-canvas"></canvas>
+                    <div class="page-navigation">
+                        <button class="btn btn-small" id="prevPage1">←</button>
+                        <input type="number" class="page-input" id="pageInput1" value="1" min="1">
+                        <span id="pageTotal1">of 1</span>
+                        <button class="btn btn-small" id="nextPage1">→</button>
+                    </div>
+                </div>
+                <div class="comparison-panel" id="panel2" style="display: none;">
+                    <div class="panel-title" id="panelTitle2">Compared PDF</div>
+                    <canvas id="pdfCanvas2" class="pdf-canvas"></canvas>
+                    <div class="page-navigation">
+                        <button class="btn btn-small" id="prevPage2">←</button>
+                        <input type="number" class="page-input" id="pageInput2" value="1" min="1">
+                        <span id="pageTotal2">of 1</span>
+                        <button class="btn btn-small" id="nextPage2">→</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        class PDFComparer {
+            constructor() {
+                this.pdf1 = null;
+                this.pdf2 = null;
+                this.currentPage1 = 1;
+                this.currentPage2 = 1;
+                this.zoom = 1.0;
+                this.syncPages = true;
+                this.comparisonResults = [];
+
+                this.setupElements();
+                this.setupEvents();
+            }
+
+            setupElements() {
+                this.uploadBox1 = document.getElementById('uploadBox1');
+                this.uploadBox2 = document.getElementById('uploadBox2');
+                this.pdfInput1 = document.getElementById('pdfInput1');
+                this.pdfInput2 = document.getElementById('pdfInput2');
+                this.compareTools = document.getElementById('compareTools');
+                this.controls = document.getElementById('controls');
+                this.placeholder = document.getElementById('placeholder');
+                this.loading = document.getElementById('loading');
+                this.canvas1 = document.getElementById('pdfCanvas1');
+                this.canvas2 = document.getElementById('pdfCanvas2');
+                this.ctx1 = this.canvas1.getContext('2d');
+                this.ctx2 = this.canvas2.getContext('2d');
+                this.panel1 = document.getElementById('panel1');
+                this.panel2 = document.getElementById('panel2');
+            }
+
+            setupEvents() {
+                this.uploadBox1.addEventListener('click', () => this.pdfInput1.click());
+                this.uploadBox2.addEventListener('click', () => this.pdfInput2.click());
+                this.pdfInput1.addEventListener('change', (e) => this.loadPDF(e.target.files[0], 1));
+                this.pdfInput2.addEventListener('change', (e) => this.loadPDF(e.target.files[0], 2));
+
+                this.setupDragDrop();
+                this.setupComparisonEvents();
+                this.setupNavigationEvents();
+            }
+
+            setupDragDrop() {
+                [this.uploadBox1, this.uploadBox2].forEach((box, index) => {
+                    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                        box.addEventListener(eventName, (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        });
+                    });
+
+                    box.addEventListener('dragover', () => box.classList.add('dragover'));
+                    box.addEventListener('dragleave', () => box.classList.remove('dragover'));
+                    
+                    box.addEventListener('drop', (e) => {
+                        box.classList.remove('dragover');
+                        const files = Array.from(e.dataTransfer.files);
+                        const pdfFile = files.find(f => f.type === 'application/pdf');
+                        if (pdfFile) this.loadPDF(pdfFile, index + 1);
+                    });
+                });
+            }
+
+            setupComparisonEvents() {
+                document.getElementById('compareBtn').addEventListener('click', () => this.performComparison());
+                document.getElementById('exportResultsBtn').addEventListener('click', () => this.exportResults());
+                document.getElementById('resetComparisonBtn').addEventListener('click', () => this.resetComparison());
+                document.getElementById('compareMode').addEventListener('change', () => this.updateComparisonMode());
+            }
+
+            setupNavigationEvents() {
+                // Global navigation
+                document.getElementById('prevPageBtn').addEventListener('click', () => this.previousPage());
+                document.getElementById('nextPageBtn').addEventListener('click', () => this.nextPage());
+                document.getElementById('pageInput').addEventListener('change', (e) => this.goToPage(parseInt(e.target.value)));
+                document.getElementById('zoomInBtn').addEventListener('click', () => this.zoomIn());
+                document.getElementById('zoomOutBtn').addEventListener('click', () => this.zoomOut());
+                document.getElementById('syncPagesBtn').addEventListener('click', () => this.toggleSync());
+
+                // Individual navigation
+                ['1', '2'].forEach(num => {
+                    document.getElementById(`prevPage${num}`).addEventListener('click', () => this.previousPage(num));
+                    document.getElementById(`nextPage${num}`).addEventListener('click', () => this.nextPage(num));
+                    document.getElementById(`pageInput${num}`).addEventListener('change', (e) => this.goToPage(parseInt(e.target.value), num));
+                });
+            }
+
+            async loadPDF(file, pdfNumber) {
+                if (!file || file.type !== 'application/pdf') {
+                    this.showToast('Please select a valid PDF file', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast(`Loading PDF ${pdfNumber}...`, 'info');
+
+                    const arrayBuffer = await file.arrayBuffer();
+                    const typedArray = new Uint8Array(arrayBuffer);
+                    
+                    const pdfDoc = await pdfjsLib.getDocument({
+                        data: typedArray,
+                        cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+                        cMapPacked: true
+                    }).promise;
+
+                    if (pdfNumber === 1) {
+                        this.pdf1 = pdfDoc;
+                        this.currentPage1 = 1;
+                    } else {
+                        this.pdf2 = pdfDoc;
+                        this.currentPage2 = 1;
+                    }
+
+                    this.updateFileInfo(file, pdfDoc, pdfNumber);
+                    this.updateUI();
+
+                    if (this.pdf1 && this.pdf2) {
+                        await this.renderBothPages();
+                        this.showComparisonView();
+                    } else {
+                        await this.renderSinglePage(pdfNumber);
+                    }
+
+                    this.showToast(`PDF ${pdfNumber} loaded: ${pdfDoc.numPages} pages`, 'success');
+                } catch (error) {
+                    console.error(`PDF ${pdfNumber} loading error:`, error);
+                    this.showToast(`Failed to load PDF ${pdfNumber}`, 'error');
+                }
+            }
+
+            updateFileInfo(file, pdfDoc, pdfNumber) {
+                const fileInfo = document.getElementById(`fileInfo${pdfNumber}`);
+                const fileName = document.getElementById(`fileName${pdfNumber}`);
+                const fileDetails = document.getElementById(`fileDetails${pdfNumber}`);
+
+                fileName.textContent = file.name;
+                fileDetails.textContent = `${pdfDoc.numPages} pages • ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+                fileInfo.style.display = 'block';
+            }
+
+            async renderSinglePage(pdfNumber) {
+                const pdf = pdfNumber === 1 ? this.pdf1 : this.pdf2;
+                const canvas = pdfNumber === 1 ? this.canvas1 : this.canvas2;
+                const ctx = pdfNumber === 1 ? this.ctx1 : this.ctx2;
+                const currentPage = pdfNumber === 1 ? this.currentPage1 : this.currentPage2;
+
+                if (!pdf) return;
+
+                try {
+                    const page = await pdf.getPage(currentPage);
+                    const viewport = page.getViewport({ scale: this.zoom });
+
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    await page.render({
+                        canvasContext: ctx,
+                        viewport: viewport
+                    }).promise;
+                } catch (error) {
+                    console.error(`Page render error (PDF ${pdfNumber}):`, error);
+                }
+            }
+
+            async renderBothPages() {
+                await Promise.all([
+                    this.renderSinglePage(1),
+                    this.renderSinglePage(2)
+                ]);
+            }
+
+            showComparisonView() {
+                this.placeholder.style.display = 'none';
+                this.panel1.style.display = 'flex';
+                this.panel2.style.display = 'flex';
+                this.controls.style.display = 'flex';
+                this.compareTools.style.display = 'block';
+            }
+
+            async performComparison() {
+                if (!this.pdf1 || !this.pdf2) {
+                    this.showToast('Please upload both PDF files first', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Analyzing differences...', 'info');
+                    this.loading.style.display = 'block';
+                    this.panel1.style.display = 'none';
+                    this.panel2.style.display = 'none';
+
+                    const compareMode = document.getElementById('compareMode').value;
+                    this.comparisonResults = [];
+
+                    switch (compareMode) {
+                        case 'text':
+                            await this.compareTextContent();
+                            break;
+                        case 'visual':
+                            await this.compareVisualContent();
+                            break;
+                        case 'structure':
+                            await this.comparePageStructure();
+                            break;
+                        case 'metadata':
+                            await this.compareMetadata();
+                            break;
+                    }
+
+                    this.displayResults();
+                    this.loading.style.display = 'none';
+                    this.panel1.style.display = 'flex';
+                    this.panel2.style.display = 'flex';
+
+                    document.getElementById('exportResultsBtn').disabled = false;
+                    this.showToast(`Comparison complete: ${this.comparisonResults.length} differences found`, 'success');
+                } catch (error) {
+                    console.error('Comparison error:', error);
+                    this.showToast('Failed to compare PDFs', 'error');
+                    this.loading.style.display = 'none';
+                    this.panel1.style.display = 'flex';
+                    this.panel2.style.display = 'flex';
+                }
+            }
+
+            async compareTextContent() {
+                const maxPages = Math.max(this.pdf1.numPages, this.pdf2.numPages);
+                
+                for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+                    let text1 = '', text2 = '';
+                    
+                    if (pageNum <= this.pdf1.numPages) {
+                        const page1 = await this.pdf1.getPage(pageNum);
+                        const textContent1 = await page1.getTextContent();
+                        text1 = textContent1.items.map(item => item.str).join(' ').trim();
+                    }
+                    
+                    if (pageNum <= this.pdf2.numPages) {
+                        const page2 = await this.pdf2.getPage(pageNum);
+                        const textContent2 = await page2.getTextContent();
+                        text2 = textContent2.items.map(item => item.str).join(' ').trim();
+                    }
+
+                    if (text1 !== text2) {
+                        this.comparisonResults.push({
+                            type: text1 && text2 ? 'modified' : (text1 ? 'removed' : 'added'),
+                            page: pageNum,
+                            description: `Page ${pageNum}: Text content differs`,
+                            details: `Characters: ${text1.length} vs ${text2.length}`
+                        });
+                    }
+                }
+            }
+
+            async compareVisualContent() {
+                const maxPages = Math.max(this.pdf1.numPages, this.pdf2.numPages);
+                
+                for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+                    const canvas1 = document.createElement('canvas');
+                    const canvas2 = document.createElement('canvas');
+                    const ctx1 = canvas1.getContext('2d');
+                    const ctx2 = canvas2.getContext('2d');
+
+                    let imageData1 = null, imageData2 = null;
+
+                    if (pageNum <= this.pdf1.numPages) {
+                        const page1 = await this.pdf1.getPage(pageNum);
+                        const viewport1 = page1.getViewport({ scale: 0.5 });
+                        canvas1.width = viewport1.width;
+                        canvas1.height = viewport1.height;
+                        await page1.render({ canvasContext: ctx1, viewport: viewport1 }).promise;
+                        imageData1 = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
+                    }
+
+                    if (pageNum <= this.pdf2.numPages) {
+                        const page2 = await this.pdf2.getPage(pageNum);
+                        const viewport2 = page2.getViewport({ scale: 0.5 });
+                        canvas2.width = viewport2.width;
+                        canvas2.height = viewport2.height;
+                        await page2.render({ canvasContext: ctx2, viewport: viewport2 }).promise;
+                        imageData2 = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
+                    }
+
+                    // Simple pixel difference check
+                    if (imageData1 && imageData2) {
+                        if (canvas1.width !== canvas2.width || canvas1.height !== canvas2.height) {
+                            this.comparisonResults.push({
+                                type: 'modified',
+                                page: pageNum,
+                                description: `Page ${pageNum}: Different dimensions`,
+                                details: `${canvas1.width}×${canvas1.height} vs ${canvas2.width}×${canvas2.height}`
+                            });
+                        } else {
+                            let differences = 0;
+                            for (let i = 0; i < imageData1.data.length; i += 4) {
+                                if (Math.abs(imageData1.data[i] - imageData2.data[i]) > 10 ||
+                                    Math.abs(imageData1.data[i+1] - imageData2.data[i+1]) > 10 ||
+                                    Math.abs(imageData1.data[i+2] - imageData2.data[i+2]) > 10) {
+                                    differences++;
+                                }
+                            }
+                            
+                            if (differences > 100) { // Threshold for "different"
+                                this.comparisonResults.push({
+                                    type: 'modified',
+                                    page: pageNum,
+                                    description: `Page ${pageNum}: Visual differences detected`,
+                                    details: `${differences} pixel differences`
+                                });
+                            }
+                        }
+                    } else if (imageData1 || imageData2) {
+                        this.comparisonResults.push({
+                            type: imageData1 ? 'removed' : 'added',
+                            page: pageNum,
+                            description: `Page ${pageNum}: ${imageData1 ? 'Only in first PDF' : 'Only in second PDF'}`,
+                            details: 'Page count mismatch'
+                        });
+                    }
+                }
+            }
+
+            async comparePageStructure() {
+                const maxPages = Math.max(this.pdf1.numPages, this.pdf2.numPages);
+                
+                for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+                    let structure1 = null, structure2 = null;
+                    
+                    if (pageNum <= this.pdf1.numPages) {
+                        const page1 = await this.pdf1.getPage(pageNum);
+                        structure1 = {
+                            width: page1.view[2],
+                            height: page1.view[3],
+                            rotation: page1.rotate
+                        };
+                    }
+                    
+                    if (pageNum <= this.pdf2.numPages) {
+                        const page2 = await this.pdf2.getPage(pageNum);
+                        structure2 = {
+                            width: page2.view[2],
+                            height: page2.view[3],
+                            rotation: page2.rotate
+                        };
+                    }
+
+                    if (structure1 && structure2) {
+                        if (structure1.width !== structure2.width || 
+                            structure1.height !== structure2.height ||
+                            structure1.rotation !== structure2.rotation) {
+                            this.comparisonResults.push({
+                                type: 'modified',
+                                page: pageNum,
+                                description: `Page ${pageNum}: Structure differs`,
+                                details: `Size: ${structure1.width}×${structure1.height} vs ${structure2.width}×${structure2.height}`
+                            });
+                        }
+                    } else {
+                        this.comparisonResults.push({
+                            type: structure1 ? 'removed' : 'added',
+                            page: pageNum,
+                            description: `Page ${pageNum}: ${structure1 ? 'Missing in second PDF' : 'Added in second PDF'}`,
+                            details: 'Page structure comparison'
+                        });
+                    }
+                }
+            }
+
+            async compareMetadata() {
+                // Compare page counts
+                if (this.pdf1.numPages !== this.pdf2.numPages) {
+                    this.comparisonResults.push({
+                        type: 'modified',
+                        page: 'All',
+                        description: 'Different page counts',
+                        details: `${this.pdf1.numPages} vs ${this.pdf2.numPages} pages`
+                    });
+                }
+
+                // Compare document structure
+                this.comparisonResults.push({
+                    type: 'info',
+                    page: 'All',
+                    description: 'Document comparison completed',
+                    details: `PDF 1: ${this.pdf1.numPages} pages, PDF 2: ${this.pdf2.numPages} pages`
+                });
+            }
+
+            displayResults() {
+                const differencesPanel = document.getElementById('differencesPanel');
+                const differencesList = document.getElementById('differencesList');
+                
+                if (this.comparisonResults.length === 0) {
+                    differencesList.innerHTML = '<div style="text-align: center; color: #00ff88; padding: 20px;">No differences found! Documents are identical.</div>';
+                } else {
+                    differencesList.innerHTML = '';
+                    this.comparisonResults.forEach(result => {
+                        const item = document.createElement('div');
+                        item.className = `difference-item ${result.type}`;
+                        item.innerHTML = `
+                            <div style="font-weight: 500; margin-bottom: 4px;">${result.description}</div>
+                            <div style="color: #999; font-size: 11px;">${result.details}</div>
+                        `;
+                        differencesList.appendChild(item);
+                    });
+                }
+
+                document.getElementById('differences').textContent = this.comparisonResults.length;
+                differencesPanel.style.display = 'block';
+            }
+
+            async previousPage(pdfNumber = null) {
+                if (pdfNumber) {
+                    const currentPage = pdfNumber === '1' ? this.currentPage1 : this.currentPage2;
+                    const pdf = pdfNumber === '1' ? this.pdf1 : this.pdf2;
+                    
+                    if (currentPage > 1) {
+                        if (pdfNumber === '1') this.currentPage1--;
+                        else this.currentPage2--;
+                        await this.renderSinglePage(parseInt(pdfNumber));
+                        this.updateNavigationUI();
+                    }
+                } else if (this.syncPages) {
+                    if (this.currentPage1 > 1 && this.currentPage2 > 1) {
+                        this.currentPage1--;
+                        this.currentPage2--;
+                        await this.renderBothPages();
+                        this.updateNavigationUI();
+                    }
+                }
+            }
+
+            async nextPage(pdfNumber = null) {
+                if (pdfNumber) {
+                    const currentPage = pdfNumber === '1' ? this.currentPage1 : this.currentPage2;
+                    const pdf = pdfNumber === '1' ? this.pdf1 : this.pdf2;
+                    
+                    if (currentPage < pdf.numPages) {
+                        if (pdfNumber === '1') this.currentPage1++;
+                        else this.currentPage2++;
+                        await this.renderSinglePage(parseInt(pdfNumber));
+                        this.updateNavigationUI();
+                    }
+                } else if (this.syncPages) {
+                    const maxPage1 = this.pdf1 ? this.pdf1.numPages : 0;
+                    const maxPage2 = this.pdf2 ? this.pdf2.numPages : 0;
+                    
+                    if (this.currentPage1 < maxPage1 && this.currentPage2 < maxPage2) {
+                        this.currentPage1++;
+                        this.currentPage2++;
+                        await this.renderBothPages();
+                        this.updateNavigationUI();
+                    }
+                }
+            }
+
+            async goToPage(pageNum, pdfNumber = null) {
+                if (pdfNumber) {
+                    const pdf = pdfNumber === '1' ? this.pdf1 : this.pdf2;
+                    if (pageNum >= 1 && pageNum <= pdf.numPages) {
+                        if (pdfNumber === '1') this.currentPage1 = pageNum;
+                        else this.currentPage2 = pageNum;
+                        await this.renderSinglePage(parseInt(pdfNumber));
+                        this.updateNavigationUI();
+                    }
+                } else if (this.syncPages && this.pdf1 && this.pdf2) {
+                    const maxPage = Math.min(this.pdf1.numPages, this.pdf2.numPages);
+                    if (pageNum >= 1 && pageNum <= maxPage) {
+                        this.currentPage1 = pageNum;
+                        this.currentPage2 = pageNum;
+                        await this.renderBothPages();
+                        this.updateNavigationUI();
+                    }
+                }
+            }
+
+            zoomIn() {
+                this.zoom = Math.min(this.zoom * 1.2, 3.0);
+                this.renderBothPages();
+                this.updateZoomDisplay();
+            }
+
+            zoomOut() {
+                this.zoom = Math.max(this.zoom / 1.2, 0.3);
+                this.renderBothPages();
+                this.updateZoomDisplay();
+            }
+
+            toggleSync() {
+                this.syncPages = !this.syncPages;
+                const syncBtn = document.getElementById('syncPagesBtn');
+                syncBtn.textContent = this.syncPages ? 'Sync: ON' : 'Sync: OFF';
+                syncBtn.classList.toggle('btn-active', this.syncPages);
+                this.showToast(`Page sync ${this.syncPages ? 'enabled' : 'disabled'}`, 'info');
+            }
+
+            updateComparisonMode() {
+                // Reset previous results when mode changes
+                this.comparisonResults = [];
+                document.getElementById('differencesPanel').style.display = 'none';
+                document.getElementById('exportResultsBtn').disabled = true;
+                document.getElementById('differences').textContent = '0';
+            }
+
+            resetComparison() {
+                this.comparisonResults = [];
+                document.getElementById('differencesPanel').style.display = 'none';
+                document.getElementById('exportResultsBtn').disabled = true;
+                document.getElementById('differences').textContent = '0';
+                this.showToast('Comparison reset', 'info');
+            }
+
+            exportResults() {
+                if (this.comparisonResults.length === 0) {
+                    this.showToast('No comparison results to export', 'error');
+                    return;
+                }
+
+                const results = {
+                    timestamp: new Date().toISOString(),
+                    compareMode: document.getElementById('compareMode').value,
+                    pdf1: { pages: this.pdf1.numPages },
+                    pdf2: { pages: this.pdf2.numPages },
+                    differences: this.comparisonResults
+                };
+
+                const jsonContent = JSON.stringify(results, null, 2);
+                const blob = new Blob([jsonContent], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'pdf-comparison-results.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                this.showToast('Comparison results exported', 'success');
+            }
+
+            updateNavigationUI() {
+                if (this.pdf1) {
+                    document.getElementById('pageInput1').value = this.currentPage1;
+                    document.getElementById('pageTotal1').textContent = `of ${this.pdf1.numPages}`;
+                    document.getElementById('prevPage1').disabled = this.currentPage1 === 1;
+                    document.getElementById('nextPage1').disabled = this.currentPage1 === this.pdf1.numPages;
+                }
+
+                if (this.pdf2) {
+                    document.getElementById('pageInput2').value = this.currentPage2;
+                    document.getElementById('pageTotal2').textContent = `of ${this.pdf2.numPages}`;
+                    document.getElementById('prevPage2').disabled = this.currentPage2 === 1;
+                    document.getElementById('nextPage2').disabled = this.currentPage2 === this.pdf2.numPages;
+                }
+
+                if (this.syncPages && this.pdf1 && this.pdf2) {
+                    const maxPage = Math.min(this.pdf1.numPages, this.pdf2.numPages);
+                    document.getElementById('pageInput').value = Math.min(this.currentPage1, this.currentPage2);
+                    document.getElementById('pageTotal').textContent = `of ${maxPage}`;
+                    document.getElementById('prevPageBtn').disabled = this.currentPage1 === 1 || this.currentPage2 === 1;
+                    document.getElementById('nextPageBtn').disabled = this.currentPage1 === this.pdf1.numPages || this.currentPage2 === this.pdf2.numPages;
+                }
+            }
+
+            updateZoomDisplay() {
+                document.getElementById('zoomLevel').textContent = Math.round(this.zoom * 100) + '%';
+            }
+
+            updateUI() {
+                if (this.pdf1) {
+                    document.getElementById('pages1').textContent = this.pdf1.numPages;
+                }
+                if (this.pdf2) {
+                    document.getElementById('pages2').textContent = this.pdf2.numPages;
+                }
+
+                if (this.pdf1 && this.pdf2) {
+                    document.getElementById('pageInput').max = Math.min(this.pdf1.numPages, this.pdf2.numPages);
+                    document.getElementById('pageInput1').max = this.pdf1.numPages;
+                    document.getElementById('pageInput2').max = this.pdf2.numPages;
+                }
+
+                this.updateNavigationUI();
+                this.updateZoomDisplay();
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the comparer
+        document.addEventListener('DOMContentLoaded', () => {
+            new PDFComparer();
+        });
+    </script>
+</body>
+</html>

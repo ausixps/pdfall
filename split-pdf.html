@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Splitter - PDF Pro Suite</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #00ff88;
+        }
+        
+        .back-btn {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+        
+        .main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 50px);
+        }
+        
+        .sidebar {
+            width: 380px;
+            background: #141414;
+            border-right: 1px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .upload-section {
+            margin-bottom: 30px;
+        }
+        
+        .upload-box {
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #1a1a1a;
+            transition: all 0.3s;
+        }
+        
+        .upload-box:hover {
+            border-color: #00ff88;
+            background: #1e1e1e;
+        }
+        
+        .upload-box.dragover {
+            border-color: #00ff88;
+            background: #002a1a;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.7;
+        }
+        
+        .viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+        }
+        
+        .controls {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: auto;
+            background: #222;
+        }
+        
+        .pdf-canvas {
+            border: 2px solid #00ff88;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .split-options {
+            margin-top: 20px;
+        }
+        
+        .split-mode {
+            margin-bottom: 20px;
+        }
+        
+        .mode-option {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .mode-option:hover {
+            border-color: #00ff88;
+            background: #252525;
+        }
+        
+        .mode-option.selected {
+            border-color: #00ff88;
+            background: #003322;
+        }
+        
+        .mode-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+        
+        .mode-desc {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .split-config {
+            margin-top: 15px;
+            padding: 15px;
+            background: #222;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .split-config.active {
+            display: block;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .input-field {
+            width: 100%;
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+        
+        .page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 6px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        
+        .page-item {
+            aspect-ratio: 3/4;
+            border: 2px solid #333;
+            border-radius: 4px;
+            background: #222;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .page-item:hover {
+            border-color: #00ff88;
+            background: #2a2a2a;
+        }
+        
+        .page-item.split-point {
+            border-color: #ff6b35;
+            background: #2a1a0f;
+            color: #ff6b35;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #333;
+            border-color: #555;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary { 
+            background: #00ff88; 
+            color: #000; 
+            border-color: #00ff88;
+        }
+        
+        .btn-primary:hover { 
+            background: #00cc70;
+            border-color: #00cc70;
+        }
+        
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+        
+        .split-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: #ccc;
+        }
+        
+        .placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .placeholder h3 {
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #00ff88;
+            color: #000;
+        }
+        
+        .toast.error {
+            background: #ff4757;
+        }
+        
+        .toast.info {
+            background: #3742fa;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #00ff88;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            background: #222;
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .range-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .range-input {
+            width: 80px;
+        }
+        
+        .preview-info {
+            color: #ccc;
+            font-size: 14px;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>✂️ PDF Splitter</h1>
+        <a href="index.html" class="back-btn">← Back to Tools</a>
+    </header>
+
+    <main class="main">
+        <div class="sidebar">
+            <div class="upload-section">
+                <div class="section-title">Upload PDF File</div>
+                <div class="upload-box" id="uploadBox">
+                    <span class="upload-icon">📄</span>
+                    <div>Drop PDF here or click to browse</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">Maximum file size: 100MB</div>
+                </div>
+                <input type="file" id="pdfInput" accept=".pdf" style="display: none">
+            </div>
+
+            <div class="split-options" id="splitOptions" style="display: none;">
+                <div class="section-title">PDF Information</div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalPages">0</div>
+                        <div class="stat-label">Total Pages</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="fileSize">0</div>
+                        <div class="stat-label">File Size</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Split Mode</div>
+                
+                <div class="split-mode">
+                    <div class="mode-option" data-mode="pages">
+                        <div class="mode-title">📄 Split by Pages</div>
+                        <div class="mode-desc">Extract specific page ranges</div>
+                    </div>
+                    
+                    <div class="mode-option" data-mode="interval">
+                        <div class="mode-title">📊 Split by Interval</div>
+                        <div class="mode-desc">Split every N pages</div>
+                    </div>
+                    
+                    <div class="mode-option" data-mode="equal">
+                        <div class="mode-title">⚖️ Split Equally</div>
+                        <div class="mode-desc">Split into equal parts</div>
+                    </div>
+                </div>
+
+                <div class="split-config" id="configPages">
+                    <div class="input-group">
+                        <label class="input-label">Page Ranges (e.g., 1-5, 8-10, 15)</label>
+                        <input type="text" class="input-field" id="pageRanges" placeholder="1-5, 8-10, 15">
+                    </div>
+                    <div style="font-size: 11px; color: #999; margin-bottom: 10px;">
+                        Separate ranges with commas. Use hyphen for ranges (1-5) or single numbers (8)
+                    </div>
+                </div>
+
+                <div class="split-config" id="configInterval">
+                    <div class="input-group">
+                        <label class="input-label">Split every N pages</label>
+                        <input type="number" class="input-field" id="intervalPages" placeholder="5" min="1">
+                    </div>
+                </div>
+
+                <div class="split-config" id="configEqual">
+                    <div class="input-group">
+                        <label class="input-label">Number of parts</label>
+                        <input type="number" class="input-field" id="equalParts" placeholder="3" min="2">
+                    </div>
+                </div>
+
+                <div class="split-summary" id="splitSummary" style="display: none;">
+                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #00ff88;">Split Preview</div>
+                    <div id="summaryText"></div>
+                    <button class="btn btn-primary" id="splitBtn" style="width: 100%; margin-top: 15px;">Split PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="viewer">
+            <div class="controls" id="controls" style="display: none;">
+                <div class="preview-info" id="previewInfo">PDF loaded successfully</div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="placeholder" id="placeholder">
+                    <h3>✂️ PDF Splitter</h3>
+                    <p>Upload a PDF file to split it into multiple documents</p>
+                </div>
+                <div class="loading" id="loading">
+                    <div>Processing PDF...</div>
+                </div>
+                <canvas id="pdfCanvas" class="pdf-canvas" style="display: none;"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        class PDFSplitter {
+            constructor() {
+                this.pdfDoc = null;
+                this.pdfLibDoc = null;
+                this.totalPages = 0;
+                this.currentMode = null;
+                this.splitConfig = {};
+
+                this.uploadBox = document.getElementById('uploadBox');
+                this.pdfInput = document.getElementById('pdfInput');
+                this.splitOptions = document.getElementById('splitOptions');
+                this.controls = document.getElementById('controls');
+                this.placeholder = document.getElementById('placeholder');
+                this.loading = document.getElementById('loading');
+                this.canvas = document.getElementById('pdfCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                this.setupEvents();
+            }
+
+            setupEvents() {
+                this.uploadBox.addEventListener('click', () => this.pdfInput.click());
+                this.pdfInput.addEventListener('change', (e) => this.loadPDF(e.target.files[0]));
+
+                this.setupDragDrop();
+
+                // Mode selection
+                document.querySelectorAll('.mode-option').forEach(option => {
+                    option.addEventListener('click', () => this.selectMode(option.dataset.mode));
+                });
+
+                // Input events
+                document.getElementById('pageRanges').addEventListener('input', () => this.updateSplitSummary());
+                document.getElementById('intervalPages').addEventListener('input', () => this.updateSplitSummary());
+                document.getElementById('equalParts').addEventListener('input', () => this.updateSplitSummary());
+
+                document.getElementById('splitBtn').addEventListener('click', () => this.splitPDF());
+            }
+
+            setupDragDrop() {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    document.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+
+                this.uploadBox.addEventListener('dragover', () => {
+                    this.uploadBox.classList.add('dragover');
+                });
+
+                this.uploadBox.addEventListener('dragleave', () => {
+                    this.uploadBox.classList.remove('dragover');
+                });
+
+                this.uploadBox.addEventListener('drop', (e) => {
+                    this.uploadBox.classList.remove('dragover');
+                    const files = Array.from(e.dataTransfer.files);
+                    const pdfFile = files.find(f => f.type === 'application/pdf');
+                    if (pdfFile) this.loadPDF(pdfFile);
+                });
+            }
+
+            async loadPDF(file) {
+                if (!file || file.type !== 'application/pdf') {
+                    this.showToast('Please select a valid PDF file', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Loading PDF...', 'info');
+                    this.placeholder.style.display = 'none';
+                    this.loading.style.display = 'block';
+
+                    const arrayBuffer = await file.arrayBuffer();
+                    this.pdfLibDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                    
+                    const typedArray = new Uint8Array(arrayBuffer);
+                    this.pdfDoc = await pdfjsLib.getDocument({
+                        data: typedArray,
+                        cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+                        cMapPacked: true
+                    }).promise;
+                    
+                    this.totalPages = this.pdfDoc.numPages;
+                    this.fileSize = file.size;
+
+                    await this.renderPreview();
+                    this.updateUI();
+
+                    this.loading.style.display = 'none';
+                    this.canvas.style.display = 'block';
+                    this.controls.style.display = 'flex';
+                    this.splitOptions.style.display = 'block';
+
+                    this.showToast(`PDF loaded: ${this.totalPages} pages`, 'success');
+                } catch (error) {
+                    console.error('PDF loading error:', error);
+                    this.showToast('Failed to load PDF', 'error');
+                    this.loading.style.display = 'none';
+                    this.placeholder.style.display = 'block';
+                }
+            }
+
+            async renderPreview() {
+                if (!this.pdfDoc) return;
+
+                try {
+                    const page = await this.pdfDoc.getPage(1);
+                    const viewport = page.getViewport({ scale: 1.5 });
+
+                    this.canvas.width = viewport.width;
+                    this.canvas.height = viewport.height;
+                    this.canvas.style.width = viewport.width + 'px';
+                    this.canvas.style.height = viewport.height + 'px';
+
+                    const renderContext = {
+                        canvasContext: this.ctx,
+                        viewport: viewport
+                    };
+
+                    await page.render(renderContext).promise;
+                } catch (error) {
+                    console.error('Preview render error:', error);
+                }
+            }
+
+            selectMode(mode) {
+                this.currentMode = mode;
+                
+                // Update UI
+                document.querySelectorAll('.mode-option').forEach(option => {
+                    option.classList.toggle('selected', option.dataset.mode === mode);
+                });
+
+                document.querySelectorAll('.split-config').forEach(config => {
+                    config.classList.remove('active');
+                });
+
+                document.getElementById(`config${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
+
+                this.updateSplitSummary();
+            }
+
+            updateSplitSummary() {
+                if (!this.currentMode) return;
+
+                const summary = document.getElementById('splitSummary');
+                const summaryText = document.getElementById('summaryText');
+                let config = null;
+
+                try {
+                    switch (this.currentMode) {
+                        case 'pages':
+                            config = this.parsePageRanges();
+                            break;
+                        case 'interval':
+                            config = this.parseInterval();
+                            break;
+                        case 'equal':
+                            config = this.parseEqual();
+                            break;
+                    }
+
+                    if (config && config.splits.length > 0) {
+                        summaryText.innerHTML = config.description;
+                        summary.style.display = 'block';
+                        this.splitConfig = config;
+                    } else {
+                        summary.style.display = 'none';
+                    }
+                } catch (error) {
+                    summaryText.textContent = error.message;
+                    summary.style.display = 'block';
+                }
+            }
+
+            parsePageRanges() {
+                const input = document.getElementById('pageRanges').value.trim();
+                if (!input) throw new Error('Please enter page ranges');
+
+                const ranges = input.split(',').map(r => r.trim()).filter(r => r);
+                const splits = [];
+
+                for (const range of ranges) {
+                    if (range.includes('-')) {
+                        const [start, end] = range.split('-').map(n => parseInt(n.trim()));
+                        if (isNaN(start) || isNaN(end) || start > end || start < 1 || end > this.totalPages) {
+                            throw new Error(`Invalid range: ${range}`);
+                        }
+                        splits.push({ start, end, name: `pages-${start}-${end}` });
+                    } else {
+                        const page = parseInt(range);
+                        if (isNaN(page) || page < 1 || page > this.totalPages) {
+                            throw new Error(`Invalid page: ${range}`);
+                        }
+                        splits.push({ start: page, end: page, name: `page-${page}` });
+                    }
+                }
+
+                return {
+                    splits,
+                    description: `Will create ${splits.length} file(s): ${splits.map(s => 
+                        s.start === s.end ? `Page ${s.start}` : `Pages ${s.start}-${s.end}`
+                    ).join(', ')}`
+                };
+            }
+
+            parseInterval() {
+                const interval = parseInt(document.getElementById('intervalPages').value);
+                if (isNaN(interval) || interval < 1) {
+                    throw new Error('Please enter a valid interval');
+                }
+
+                const splits = [];
+                for (let i = 1; i <= this.totalPages; i += interval) {
+                    const start = i;
+                    const end = Math.min(i + interval - 1, this.totalPages);
+                    splits.push({ start, end, name: `part-${Math.ceil(i / interval)}` });
+                }
+
+                return {
+                    splits,
+                    description: `Will create ${splits.length} file(s), each with ${interval} page(s) (last may have fewer)`
+                };
+            }
+
+            parseEqual() {
+                const parts = parseInt(document.getElementById('equalParts').value);
+                if (isNaN(parts) || parts < 2 || parts > this.totalPages) {
+                    throw new Error('Please enter a valid number of parts');
+                }
+
+                const pagesPerPart = Math.ceil(this.totalPages / parts);
+                const splits = [];
+
+                for (let i = 0; i < parts; i++) {
+                    const start = i * pagesPerPart + 1;
+                    const end = Math.min((i + 1) * pagesPerPart, this.totalPages);
+                    if (start <= this.totalPages) {
+                        splits.push({ start, end, name: `part-${i + 1}` });
+                    }
+                }
+
+                return {
+                    splits,
+                    description: `Will create ${splits.length} file(s), approximately ${pagesPerPart} pages each`
+                };
+            }
+
+            async splitPDF() {
+                if (!this.splitConfig || this.splitConfig.splits.length === 0) {
+                    this.showToast('Please configure split settings', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Splitting PDF...', 'info');
+                    
+                    for (const split of this.splitConfig.splits) {
+                        const newPdf = await PDFLib.PDFDocument.create();
+                        
+                        for (let pageNum = split.start; pageNum <= split.end; pageNum++) {
+                            const [copiedPage] = await newPdf.copyPages(this.pdfLibDoc, [pageNum - 1]);
+                            newPdf.addPage(copiedPage);
+                        }
+
+                        const pdfBytes = await newPdf.save();
+                        this.downloadPDF(pdfBytes, `${split.name}.pdf`);
+                    }
+                    
+                    this.showToast(`Successfully split into ${this.splitConfig.splits.length} files`, 'success');
+                } catch (error) {
+                    console.error('Split error:', error);
+                    this.showToast('Failed to split PDF', 'error');
+                }
+            }
+
+            downloadPDF(pdfBytes, filename) {
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            updateUI() {
+                document.getElementById('totalPages').textContent = this.totalPages;
+                document.getElementById('fileSize').textContent = this.formatFileSize(this.fileSize);
+                document.getElementById('previewInfo').textContent = `PDF loaded: ${this.totalPages} pages`;
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the PDF Splitter
+        document.addEventListener('DOMContentLoaded', () => {
+            new PDFSplitter();
+        });
+    </script>
+</body>
+</html>

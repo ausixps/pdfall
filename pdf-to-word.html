@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Word Converter - PDF Pro Suite</title>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #00ff88;
+        }
+        
+        .back-btn {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+        
+        .main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 50px);
+        }
+        
+        .sidebar {
+            width: 380px;
+            background: #141414;
+            border-right: 1px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .upload-section {
+            margin-bottom: 30px;
+        }
+        
+        .upload-box {
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #1a1a1a;
+            transition: all 0.3s;
+        }
+        
+        .upload-box:hover {
+            border-color: #00ff88;
+            background: #1e1e1e;
+        }
+        
+        .upload-box.dragover {
+            border-color: #00ff88;
+            background: #002a1a;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.7;
+        }
+        
+        .viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+        }
+        
+        .controls {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: auto;
+            background: #222;
+        }
+        
+        .conversion-options {
+            margin-top: 20px;
+        }
+        
+        .format-selector {
+            margin-bottom: 20px;
+        }
+        
+        .format-option {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .format-option:hover {
+            border-color: #00ff88;
+            background: #252525;
+        }
+        
+        .format-option.selected {
+            border-color: #00ff88;
+            background: #003322;
+        }
+        
+        .format-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .format-desc {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .format-badge {
+            background: #333;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        
+        .format-badge.txt {
+            background: #3742fa;
+        }
+        
+        .format-badge.docx {
+            background: #2f86eb;
+        }
+        
+        .format-badge.rtf {
+            background: #ff6b35;
+        }
+        
+        .page-selection {
+            margin-bottom: 20px;
+        }
+        
+        .page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        
+        .page-item {
+            aspect-ratio: 3/4;
+            border: 2px solid #333;
+            border-radius: 4px;
+            background: #222;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .page-item:hover {
+            border-color: #00ff88;
+            background: #2a2a2a;
+        }
+        
+        .page-item.selected {
+            border-color: #00ff88;
+            background: #003322;
+            color: #00ff88;
+        }
+        
+        .text-preview {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 400px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ccc;
+            white-space: pre-wrap;
+            overflow-y: auto;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #333;
+            border-color: #555;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary { 
+            background: #00ff88; 
+            color: #000; 
+            border-color: #00ff88;
+        }
+        
+        .btn-primary:hover { 
+            background: #00cc70;
+            border-color: #00cc70;
+        }
+        
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+        
+        .conversion-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+        
+        .extraction-stats {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            padding: 10px;
+            background: #222;
+            border-radius: 4px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: #ccc;
+        }
+        
+        .placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .placeholder h3 {
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #00ff88;
+            color: #000;
+        }
+        
+        .toast.error {
+            background: #ff4757;
+        }
+        
+        .toast.info {
+            background: #3742fa;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #00ff88;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            background: #222;
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #00ff88;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .tips {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border-left: 3px solid #00ff88;
+        }
+        
+        .tips h4 {
+            margin-bottom: 10px;
+            color: #00ff88;
+            font-size: 13px;
+        }
+        
+        .tips ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tips li {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 5px;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        .tips li::before {
+            content: '•';
+            color: #00ff88;
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📝 PDF to Word Converter</h1>
+        <a href="index.html" class="back-btn">← Back to Tools</a>
+    </header>
+
+    <main class="main">
+        <div class="sidebar">
+            <div class="upload-section">
+                <div class="section-title">Upload PDF File</div>
+                <div class="upload-box" id="uploadBox">
+                    <span class="upload-icon">📄</span>
+                    <div>Drop PDF here or click to browse</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">Maximum file size: 100MB</div>
+                </div>
+                <input type="file" id="pdfInput" accept=".pdf" style="display: none">
+            </div>
+
+            <div class="conversion-options" id="conversionOptions" style="display: none;">
+                <div class="section-title">PDF Information</div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalPages">0</div>
+                        <div class="stat-label">Pages</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="selectedPages">0</div>
+                        <div class="stat-label">Selected</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Output Format</div>
+                
+                <div class="format-selector">
+                    <div class="format-option selected" data-format="txt">
+                        <div class="format-title">
+                            Plain Text (.txt)
+                            <span class="format-badge txt">TXT</span>
+                        </div>
+                        <div class="format-desc">Simple text format, no formatting</div>
+                    </div>
+                    
+                    <div class="format-option" data-format="rtf">
+                        <div class="format-title">
+                            Rich Text (.rtf)
+                            <span class="format-badge rtf">RTF</span>
+                        </div>
+                        <div class="format-desc">Formatted text, compatible with Word</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Select Pages</div>
+                
+                <div class="page-selection">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="btn btn-small" id="selectAll">Select All</button>
+                        <button class="btn btn-small" id="deselectAll">Deselect All</button>
+                    </div>
+                    
+                    <div class="page-grid" id="pageGrid"></div>
+                </div>
+
+                <div class="conversion-summary" id="conversionSummary" style="display: none;">
+                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #00ff88;">Extraction Ready</div>
+                    <div id="summaryText"></div>
+                    
+                    <div class="progress-bar" id="progressContainer" style="display: none;">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="extractBtn" style="width: 100%; margin-top: 15px;">Extract Text</button>
+                    <button class="btn btn-primary" id="downloadBtn" style="width: 100%; margin-top: 10px; display: none;">Download Document</button>
+                </div>
+
+                <div class="tips">
+                    <h4>💡 Extraction Tips</h4>
+                    <ul>
+                        <li>Works best with text-based PDFs</li>
+                        <li>Image-based PDFs may have limited text</li>
+                        <li>Formatting may not be perfectly preserved</li>
+                        <li>RTF format preserves basic formatting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="viewer">
+            <div class="controls" id="controls" style="display: none;">
+                <div id="previewInfo" style="color: #ccc; font-size: 14px;">PDF loaded successfully</div>
+            </div>
+
+            <div class="content-area">
+                <div class="placeholder" id="placeholder">
+                    <h3>📝 PDF to Word Converter</h3>
+                    <p>Upload a PDF file to extract text and convert to Word-compatible formats</p>
+                </div>
+                <div class="loading" id="loading">
+                    <div>Extracting text from PDF...</div>
+                </div>
+                <div class="text-preview" id="textPreview" style="display: none;"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        class PDFToWordConverter {
+            constructor() {
+                this.pdfDoc = null;
+                this.totalPages = 0;
+                this.selectedPages = new Set();
+                this.selectedFormat = 'txt';
+                this.extractedText = '';
+
+                this.uploadBox = document.getElementById('uploadBox');
+                this.pdfInput = document.getElementById('pdfInput');
+                this.conversionOptions = document.getElementById('conversionOptions');
+                this.controls = document.getElementById('controls');
+                this.placeholder = document.getElementById('placeholder');
+                this.loading = document.getElementById('loading');
+                this.textPreview = document.getElementById('textPreview');
+
+                this.setupEvents();
+            }
+
+            setupEvents() {
+                this.uploadBox.addEventListener('click', () => this.pdfInput.click());
+                this.pdfInput.addEventListener('change', (e) => this.loadPDF(e.target.files[0]));
+
+                this.setupDragDrop();
+
+                // Format selection
+                document.querySelectorAll('.format-option').forEach(option => {
+                    option.addEventListener('click', () => this.selectFormat(option.dataset.format));
+                });
+
+                // Page selection
+                document.getElementById('selectAll').addEventListener('click', () => this.selectAllPages());
+                document.getElementById('deselectAll').addEventListener('click', () => this.deselectAllPages());
+
+                document.getElementById('extractBtn').addEventListener('click', () => this.extractText());
+                document.getElementById('downloadBtn').addEventListener('click', () => this.downloadDocument());
+            }
+
+            setupDragDrop() {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    document.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+
+                this.uploadBox.addEventListener('dragover', () => {
+                    this.uploadBox.classList.add('dragover');
+                });
+
+                this.uploadBox.addEventListener('dragleave', () => {
+                    this.uploadBox.classList.remove('dragover');
+                });
+
+                this.uploadBox.addEventListener('drop', (e) => {
+                    this.uploadBox.classList.remove('dragover');
+                    const files = Array.from(e.dataTransfer.files);
+                    const pdfFile = files.find(f => f.type === 'application/pdf');
+                    if (pdfFile) this.loadPDF(pdfFile);
+                });
+            }
+
+            async loadPDF(file) {
+                if (!file || file.type !== 'application/pdf') {
+                    this.showToast('Please select a valid PDF file', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Loading PDF...', 'info');
+                    this.placeholder.style.display = 'none';
+                    this.loading.style.display = 'block';
+
+                    const arrayBuffer = await file.arrayBuffer();
+                    const typedArray = new Uint8Array(arrayBuffer);
+                    this.pdfDoc = await pdfjsLib.getDocument({
+                        data: typedArray,
+                        cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+                        cMapPacked: true
+                    }).promise;
+                    
+                    this.totalPages = this.pdfDoc.numPages;
+                    this.selectedPages.clear();
+
+                    this.createPageGrid();
+                    this.updateUI();
+                    this.selectAllPages(); // Auto-select all pages
+
+                    this.loading.style.display = 'none';
+                    this.controls.style.display = 'flex';
+                    this.conversionOptions.style.display = 'block';
+
+                    this.showToast(`PDF loaded: ${this.totalPages} pages`, 'success');
+                } catch (error) {
+                    console.error('PDF loading error:', error);
+                    this.showToast('Failed to load PDF', 'error');
+                    this.loading.style.display = 'none';
+                    this.placeholder.style.display = 'block';
+                }
+            }
+
+            createPageGrid() {
+                const pageGrid = document.getElementById('pageGrid');
+                pageGrid.innerHTML = '';
+
+                for (let i = 1; i <= this.totalPages; i++) {
+                    const pageItem = document.createElement('div');
+                    pageItem.className = 'page-item';
+                    pageItem.textContent = i;
+                    pageItem.dataset.page = i;
+
+                    pageItem.addEventListener('click', () => this.togglePageSelection(i));
+
+                    pageGrid.appendChild(pageItem);
+                }
+            }
+
+            togglePageSelection(pageNum) {
+                if (this.selectedPages.has(pageNum)) {
+                    this.selectedPages.delete(pageNum);
+                } else {
+                    this.selectedPages.add(pageNum);
+                }
+                this.updatePageGrid();
+                this.updateConversionSummary();
+            }
+
+            selectAllPages() {
+                this.selectedPages.clear();
+                for (let i = 1; i <= this.totalPages; i++) {
+                    this.selectedPages.add(i);
+                }
+                this.updatePageGrid();
+                this.updateConversionSummary();
+            }
+
+            deselectAllPages() {
+                this.selectedPages.clear();
+                this.updatePageGrid();
+                this.updateConversionSummary();
+            }
+
+            selectFormat(format) {
+                this.selectedFormat = format;
+                
+                // Update UI
+                document.querySelectorAll('.format-option').forEach(option => {
+                    option.classList.toggle('selected', option.dataset.format === format);
+                });
+
+                this.updateConversionSummary();
+            }
+
+            updatePageGrid() {
+                const pageItems = document.querySelectorAll('.page-item');
+                pageItems.forEach(item => {
+                    const pageNum = parseInt(item.dataset.page);
+                    item.classList.toggle('selected', this.selectedPages.has(pageNum));
+                });
+
+                document.getElementById('selectedPages').textContent = this.selectedPages.size;
+            }
+
+            updateConversionSummary() {
+                const summary = document.getElementById('conversionSummary');
+                const summaryText = document.getElementById('summaryText');
+
+                if (this.selectedPages.size > 0) {
+                    const formatName = this.selectedFormat.toUpperCase();
+                    summaryText.textContent = 
+                        `Extract text from ${this.selectedPages.size} page(s) to ${formatName} format`;
+                    summary.style.display = 'block';
+                } else {
+                    summary.style.display = 'none';
+                }
+            }
+
+            async extractText() {
+                if (this.selectedPages.size === 0) {
+                    this.showToast('Please select pages to extract', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Extracting text from PDF...', 'info');
+                    document.getElementById('extractBtn').disabled = true;
+                    
+                    const progressContainer = document.getElementById('progressContainer');
+                    const progressFill = document.getElementById('progressFill');
+                    progressContainer.style.display = 'block';
+
+                    this.extractedText = '';
+                    const pages = Array.from(this.selectedPages).sort((a, b) => a - b);
+
+                    for (let i = 0; i < pages.length; i++) {
+                        const pageNum = pages[i];
+                        
+                        // Update progress
+                        const progress = ((i + 1) / pages.length) * 100;
+                        progressFill.style.width = progress + '%';
+
+                        const pageText = await this.extractPageText(pageNum);
+                        this.extractedText += `\n--- Page ${pageNum} ---\n\n${pageText}\n`;
+                    }
+
+                    // Display extracted text
+                    this.textPreview.textContent = this.extractedText;
+                    this.textPreview.style.display = 'block';
+
+                    progressContainer.style.display = 'none';
+                    document.getElementById('extractBtn').disabled = false;
+                    document.getElementById('downloadBtn').style.display = 'block';
+
+                    this.showToast(`Successfully extracted text from ${pages.length} pages`, 'success');
+                } catch (error) {
+                    console.error('Extraction error:', error);
+                    this.showToast('Failed to extract text', 'error');
+                    document.getElementById('extractBtn').disabled = false;
+                    document.getElementById('progressContainer').style.display = 'none';
+                }
+            }
+
+            async extractPageText(pageNum) {
+                try {
+                    const page = await this.pdfDoc.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    
+                    let text = '';
+                    for (const item of textContent.items) {
+                        if (item.str) {
+                            text += item.str + ' ';
+                        }
+                    }
+                    
+                    return text.trim();
+                } catch (error) {
+                    console.error(`Error extracting text from page ${pageNum}:`, error);
+                    return `[Error extracting text from page ${pageNum}]`;
+                }
+            }
+
+            downloadDocument() {
+                if (!this.extractedText) {
+                    this.showToast('No text to download', 'error');
+                    return;
+                }
+
+                let content = this.extractedText;
+                let mimeType = 'text/plain';
+                let filename = `extracted-text.${this.selectedFormat}`;
+
+                if (this.selectedFormat === 'rtf') {
+                    // Create basic RTF format
+                    content = this.createRTFContent(this.extractedText);
+                    mimeType = 'application/rtf';
+                } else if (this.selectedFormat === 'docx') {
+                    // For now, download as RTF since DOCX is complex
+                    content = this.createRTFContent(this.extractedText);
+                    mimeType = 'application/rtf';
+                    filename = 'extracted-text.rtf';
+                }
+
+                this.downloadFile(content, filename, mimeType);
+                this.showToast(`Downloaded ${filename}`, 'success');
+            }
+
+            createRTFContent(text) {
+                // Basic RTF format
+                const rtfHeader = '{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}';
+                const rtfFooter = '}';
+                
+                // Escape special RTF characters
+                const escapedText = text
+                    .replace(/\\/g, '\\\\')
+                    .replace(/\{/g, '\\{')
+                    .replace(/\}/g, '\\}')
+                    .replace(/\n/g, '\\par\n');
+
+                return `${rtfHeader}\\f0\\fs24 ${escapedText}${rtfFooter}`;
+            }
+
+            downloadFile(content, filename, mimeType) {
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            updateUI() {
+                document.getElementById('totalPages').textContent = this.totalPages;
+                document.getElementById('previewInfo').textContent = `PDF loaded: ${this.totalPages} pages`;
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the converter
+        document.addEventListener('DOMContentLoaded', () => {
+            new PDFToWordConverter();
+        });
+    </script>
+</body>
+</html>

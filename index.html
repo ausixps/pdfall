@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF PNG Inserter - Simple & Fast</title>
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <title>PDF Pro Suite - All PDF Tools in One Place</title>
     <style>
         * { 
             margin: 0; 
@@ -15,1297 +13,498 @@
         
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #0f0f0f;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
             color: #ffffff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            min-height: 100vh;
         }
         
         .header {
-            background: #1a1a1a;
-            padding: 12px 20px;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 16px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
             border-bottom: 1px solid #333;
+        }
+        
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 0 20px;
         }
         
-        .header h1 {
-            font-size: 18px;
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00ff88;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
             font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
             color: #00ff88;
         }
         
         .main {
-            display: flex;
-            flex: 1;
-            height: calc(100vh - 50px);
+            margin-top: 80px;
+            padding: 60px 20px;
         }
         
-        .sidebar {
-            width: 280px;
-            background: #141414;
-            border-right: 1px solid #333;
-            padding: 16px;
-            overflow-y: auto;
-        }
-        
-        .upload-box {
-            border: 2px dashed #444;
-            border-radius: 4px;
-            padding: 20px;
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 80px;
+        }
+        
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #00ff88, #00cc70);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            color: #cccccc;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .tools-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 0 20px;
+        }
+        
+        .tool-card {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
             cursor: pointer;
-            background: #1a1a1a;
-        }
-        
-        .upload-box:hover {
-            border-color: #00ff88;
-            background: #1e1e1e;
-        }
-        
-        .viewer {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #0a0a0a;
-        }
-        
-        .controls {
-            background: #1a1a1a;
-            padding: 8px 16px;
-            border-bottom: 1px solid #333;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .canvas-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
             position: relative;
-            overflow: auto;
-            background: #222;
+            overflow: hidden;
         }
         
-        .pdf-canvas {
-            border: 2px solid #00ff88;
-            background: white;
-            cursor: crosshair;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-        
-        .png-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 16px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        .png-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .png-item:hover {
-            background: #252525;
-            border-color: #00ff88;
-        }
-        
-        .png-item.selected {
-            background: #002a1a;
-            border-color: #00ff88;
-        }
-        
-        .png-item img {
-            width: 40px;
-            height: 40px;
-            border-radius: 2px;
-            object-fit: cover;
-        }
-        
-        .overlay {
+        .tool-card::before {
+            content: '';
             position: absolute;
-            pointer-events: none;
-            z-index: 10;
-        }
-        
-        .png-insertion {
-            position: absolute;
-            border: 2px solid #00ff88;
-            cursor: move;
-            pointer-events: all;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        
-        .png-insertion.selected {
-            border-color: #ff6b35;
-            outline: 2px solid #ff6b35;
-            outline-offset: 2px;
-        }
-        
-        .properties {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 240px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 16px;
-            display: none;
-        }
-        
-        .btn {
-            padding: 6px 12px;
-            border: 1px solid #333;
-            border-radius: 3px;
-            background: #222;
-            color: white;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .btn:hover {
-            background: #333;
-            border-color: #555;
-        }
-        
-        .btn-primary { 
-            background: #00ff88; 
-            color: #000; 
-            border-color: #00ff88;
-        }
-        
-        .btn-primary:hover { 
-            background: #00cc70;
-        }
-        
-        .btn-danger { 
-            background: #ff3333; 
-            border-color: #ff3333;
-        }
-        
-        .btn-danger:hover { 
-            background: #cc2222;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            height: 4px;
-            background: #333;
-            border: none;
-            border-radius: 2px;
-            outline: none;
-            margin: 8px 0;
-        }
-        
-        input[type="number"] {
-            width: 100%;
-            padding: 6px;
-            background: #222;
-            border: 1px solid #333;
-            border-radius: 3px;
-            color: white;
-            font-size: 12px;
-        }
-        
-        .property-group {
-            margin-bottom: 12px;
-        }
-        
-        .property-group label {
-            display: block;
-            margin-bottom: 4px;
-            font-size: 12px;
-            color: #ccc;
-        }
-        
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 8px 16px;
-            border-radius: 3px;
-            color: white;
-            font-size: 12px;
-            z-index: 1000;
-            max-width: 300px;
-        }
-        
-        .toast.success { background: #00ff88; color: #000; }
-        .toast.error { background: #ff3333; }
-        .toast.info { background: #3399ff; }
-        
-        .placeholder {
-            text-align: center;
-            color: #666;
-            font-size: 16px;
-            padding: 40px;
-        }
-        
-        .queue-list {
-            margin-top: 16px;
-            max-height: 160px;
-            overflow-y: auto;
-        }
-        
-        .queue-item {
-            padding: 8px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 3px;
-            margin-bottom: 4px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-        
-        .queue-item:hover {
-            background: #252525;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-        
-        h3 {
-            color: #fff;
-            font-size: 13px;
-            margin-bottom: 12px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid #333;
-            font-weight: 500;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
             top: 0;
-            left: 0;
+            left: -100%;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+            transition: left 0.5s;
         }
         
-        .modal-content {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 20px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
+        .tool-card:hover::before {
+            left: 100%;
         }
         
-        .page-checkboxes {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 12px;
-            background: #0f0f0f;
-            border-radius: 3px;
-            border: 1px solid #333;
+        .tool-card:hover {
+            transform: translateY(-10px);
+            border-color: #00ff88;
+            box-shadow: 0 20px 40px rgba(0, 255, 136, 0.2);
         }
         
-        .page-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px;
-            background: #222;
-            border-radius: 2px;
-            cursor: pointer;
-            font-size: 11px;
+        .tool-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: block;
         }
         
-        .page-checkbox:hover {
-            background: #333;
+        .tool-card h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #ffffff;
         }
         
-        .page-checkbox.current {
-            background: #002a1a;
+        .tool-card p {
+            color: #cccccc;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .tool-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-ready {
+            background: rgba(0, 255, 136, 0.2);
             color: #00ff88;
+            border: 1px solid #00ff88;
         }
         
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
+        .status-coming-soon {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid #ffa500;
         }
         
-        ::-webkit-scrollbar-track {
-            background: #222;
+        .footer {
+            margin-top: 80px;
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 1px solid #333;
+            background: rgba(26, 26, 26, 0.5);
         }
         
-        ::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 3px;
+        .footer p {
+            color: #999;
+            font-size: 14px;
         }
         
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        
-        /* Responsive */
         @media (max-width: 768px) {
-            .sidebar { width: 240px; }
-            .properties { width: 200px; right: 10px; }
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero p {
+                font-size: 18px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .tools-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+            }
+        }
+        
+        .disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .disabled:hover {
+            transform: none;
+            border-color: #333;
+            box-shadow: none;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>PDF PNG Inserter</h1>
-        <div style="font-size: 12px; color: #666;">Simple & Fast</div>
-    </div>
+    <header class="header">
+        <nav class="nav">
+            <a href="#" class="logo">PDF Pro Suite</a>
+            <ul class="nav-links">
+                <li><a href="#tools">Tools</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
 
-    <div class="main">
-        <div class="sidebar">
-            <h3>PDF Document</h3>
-            <div class="upload-box" id="pdf-upload">
-                <div style="font-size: 24px; margin-bottom: 8px;">📄</div>
-                <div style="font-size: 12px;">Drop PDF or click</div>
-                <input type="file" id="pdf-input" accept=".pdf" hidden>
+    <main class="main">
+        <section class="hero">
+            <h1>All PDF Tools in One Place</h1>
+            <p>Fast, simple, and powerful PDF tools for all your document needs. No registration required, completely free to use.</p>
+        </section>
+
+        <section id="tools" class="tools-grid">
+            <!-- PNG Insert Tool - Ready -->
+            <div class="tool-card" onclick="openTool('png-inserter')">
+                <span class="tool-icon">🖼️</span>
+                <h3>PNG to PDF Inserter</h3>
+                <p>Insert PNG and JPG images into PDF documents with precise positioning and customization options.</p>
+                <span class="tool-status status-ready">Ready</span>
             </div>
 
-            <h3>Images</h3>
-            <div class="upload-box" id="png-upload">
-                <div style="font-size: 20px; margin-bottom: 8px;">🖼️</div>
-                <div style="font-size: 12px;">Drop images</div>
-                <input type="file" id="png-input" accept=".png,.jpg,.jpeg" multiple hidden>
-            </div>
-            <div class="png-list" id="png-list"></div>
-
-            <h3>Queue</h3>
-            <div class="queue-list" id="queue-list">
-                <div style="color: #666; font-size: 11px;">No insertions yet</div>
+            <!-- Extract Pages - Ready -->
+            <div class="tool-card" onclick="openTool('extract-pages')">
+                <span class="tool-icon">📄</span>
+                <h3>Extract PDF Pages</h3>
+                <p>Extract specific pages from PDF documents and save them as separate files.</p>
+                <span class="tool-status status-ready">Ready</span>
             </div>
 
-            <button id="multi-page-btn" class="btn" style="width: 100%; margin-top: 12px;" disabled>
-                Multi-Page Insert
-            </button>
-            
-            <button id="export-btn" class="btn btn-primary" style="width: 100%; margin-top: 8px;" disabled>
-                Export PDF
-            </button>
-        </div>
-
-        <div class="viewer">
-            <div class="controls">
-                <button id="prev-btn" class="btn">◀</button>
-                <span id="page-info" style="font-size: 12px;">Page 0 / 0</span>
-                <button id="next-btn" class="btn">▶</button>
-                
-                <button id="zoom-out" class="btn">-</button>
-                <span id="zoom-info" style="font-size: 12px;">100%</span>
-                <button id="zoom-in" class="btn">+</button>
-                
-                <button id="fit-width" class="btn">Fit W</button>
-                <button id="fit-page" class="btn">Fit P</button>
+            <!-- Merge PDFs - Ready -->
+            <div class="tool-card" onclick="openTool('merge-pdfs')">
+                <span class="tool-icon">🔗</span>
+                <h3>Merge PDFs</h3>
+                <p>Combine multiple PDF files into a single document with customizable page order.</p>
+                <span class="tool-status status-ready">Ready</span>
             </div>
 
-            <div class="canvas-container">
-                <div class="placeholder" id="placeholder">
-                    <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
-                    <div>Load PDF to start</div>
-                </div>
-                
-                <div class="loading" id="loading" style="display: none;">
-                    <div>Loading PDF...</div>
-                </div>
-                
-                <canvas id="pdf-canvas" class="pdf-canvas" style="display: none;"></canvas>
-                <div class="overlay" id="overlay"></div>
+            <!-- Split PDF - Ready -->
+            <div class="tool-card" onclick="openTool('split-pdf')">
+                <span class="tool-icon">✂️</span>
+                <h3>Split PDF</h3>
+                <p>Split large PDF files into smaller documents or extract specific page ranges.</p>
+                <span class="tool-status status-ready">Ready</span>
             </div>
-        </div>
-    </div>
 
-    <!-- Multi-Page Modal -->
-    <div id="multi-page-modal" class="modal">
-        <div class="modal-content">
-            <h3>Multi-Page Insert</h3>
-            
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px;">Selected Image:</label>
-                <div id="selected-png-info" style="padding: 8px; background: #0f0f0f; border-radius: 3px; font-size: 11px;">
-                    No image selected
-                </div>
+            <!-- Compress PDF - Ready -->
+            <div class="tool-card" onclick="openTool('compress-pdf')">
+                <span class="tool-icon">🗜️</span>
+                <h3>Compress PDF</h3>
+                <p>Reduce PDF file size while maintaining quality for easier sharing and storage.</p>
+                <span class="tool-status status-ready">Ready</span>
             </div>
-            
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px;">Position:</label>
-                <div id="position-info" style="padding: 8px; background: #0f0f0f; border-radius: 3px; font-size: 11px;">
-                    X: 0, Y: 0
-                </div>
+
+            <!-- PDF to Images - Ready -->
+            <div class="tool-card" onclick="openTool('pdf-to-jpg')">
+                <span class="tool-icon">🎨</span>
+                <h3>PDF to Images</h3>
+                <p>Convert PDF pages to high-quality PNG, JPG, or other image formats.</p>
+                <span class="tool-status status-ready">Ready</span>
             </div>
-            
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 12px;">Select Pages:</label>
-                
-                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                    <button id="select-all-pages" class="btn" style="flex: 1;">All</button>
-                    <button id="deselect-all-pages" class="btn" style="flex: 1;">None</button>
-                    <button id="select-range" class="btn" style="flex: 1;">Range</button>
-                </div>
-                
-                <div id="range-selector" style="display: none; margin-bottom: 12px; padding: 8px; background: #0f0f0f; border-radius: 3px;">
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="number" id="range-from" min="1" placeholder="From" style="flex: 1;">
-                        <span style="font-size: 11px;">to</span>
-                        <input type="number" id="range-to" min="1" placeholder="To" style="flex: 1;">
-                        <button id="apply-range" class="btn btn-primary">Apply</button>
-                    </div>
-                </div>
-                
-                <div id="page-checkboxes" class="page-checkboxes">
-                    <!-- Checkboxes generated here -->
-                </div>
+
+            <!-- Rotate PDF - Coming Soon -->
+            <div class="tool-card disabled">
+                <span class="tool-icon">🔄</span>
+                <h3>Rotate PDF</h3>
+                <p>Rotate PDF pages to correct orientation and improve readability.</p>
+                <span class="tool-status status-coming-soon">Coming Soon</span>
             </div>
-            
-            <div style="display: flex; gap: 8px;">
-                <button id="apply-multi-page" class="btn btn-primary" style="flex: 1;">Apply</button>
-                <button id="cancel-multi-page" class="btn btn-danger" style="flex: 1;">Cancel</button>
+
+            <!-- Watermark PDF - Coming Soon -->
+            <div class="tool-card disabled">
+                <span class="tool-icon">💧</span>
+                <h3>Add Watermark</h3>
+                <p>Add text or image watermarks to PDF documents for branding or security.</p>
+                <span class="tool-status status-coming-soon">Coming Soon</span>
             </div>
-        </div>
-    </div>
 
-    <div class="properties" id="properties">
-        <h3>Properties</h3>
-        
-        <div class="property-group">
-            <label>Scale: <span id="scale-value">100%</span></label>
-            <input type="range" id="scale-slider" min="10" max="500" value="100">
-        </div>
+            <!-- JPG to PDF - Ready -->
+            <div class="tool-card" onclick="openTool('jpg-to-pdf')">
+                <span class="tool-icon">📷</span>
+                <h3>JPG to PDF</h3>
+                <p>Convert multiple images (JPG, PNG, GIF) into a single PDF document.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
 
-        <div class="property-group">
-            <label>Opacity: <span id="opacity-value">100%</span></label>
-            <input type="range" id="opacity-slider" min="10" max="100" value="100">
-        </div>
+            <!-- PDF to Word - Ready -->
+            <div class="tool-card" onclick="openTool('pdf-to-word')">
+                <span class="tool-icon">📝</span>
+                <h3>PDF to Word</h3>
+                <p>Extract text from PDF and convert to Word-compatible formats (TXT, RTF).</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
 
-        <div class="property-group">
-            <label>X Position:</label>
-            <input type="number" id="pos-x">
-        </div>
+            <!-- PDF to PowerPoint - Ready -->
+            <div class="tool-card" onclick="openTool('pdf-to-powerpoint')">
+                <span class="tool-icon">📊</span>
+                <h3>PDF to Presentation</h3>
+                <p>Convert PDF pages to HTML presentation slides that work with PowerPoint.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
 
-        <div class="property-group">
-            <label>Y Position:</label>
-            <input type="number" id="pos-y">
-        </div>
+            <!-- PDF to Excel - Ready -->
+            <div class="tool-card" onclick="openTool('pdf-to-excel')">
+                <span class="tool-icon">📊</span>
+                <h3>PDF to Excel</h3>
+                <p>Extract table data from PDF and convert to CSV format for Excel.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
 
-        <div style="display: flex; gap: 8px; margin-top: 16px;">
-            <button id="apply-btn" class="btn btn-primary" style="flex: 1;">Apply</button>
-            <button id="delete-btn" class="btn btn-danger" style="flex: 1;">Delete</button>
-        </div>
-    </div>
+            <!-- Word to PDF - Ready -->
+            <div class="tool-card" onclick="openTool('word-to-pdf')">
+                <span class="tool-icon">📝</span>
+                <h3>Word to PDF</h3>
+                <p>Convert text documents and content to professional PDF format.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
+
+            <!-- Real DOCX to PDF - Ready -->
+            <div class="tool-card" onclick="openTool('docx-to-pdf')">
+                <span class="tool-icon">📄</span>
+                <h3>DOCX to PDF</h3>
+                <p>Convert real Word documents (.docx) to PDF with formatting preservation.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
+
+            <!-- PowerPoint to PDF - Ready -->
+            <div class="tool-card" onclick="openTool('powerpoint-to-pdf')">
+                <span class="tool-icon">📊</span>
+                <h3>PowerPoint to PDF</h3>
+                <p>Convert PowerPoint slide images to PDF presentation format.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
+
+            <!-- Real PPTX to PDF - Ready -->
+            <div class="tool-card" onclick="openTool('pptx-to-pdf')">
+                <span class="tool-icon">📎</span>
+                <h3>PPTX to PDF</h3>
+                <p>Convert real PowerPoint files (.pptx) to PDF with text extraction.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
+
+            <!-- Excel to PDF - Ready -->
+            <div class="tool-card" onclick="openTool('excel-to-pdf')">
+                <span class="tool-icon">📈</span>
+                <h3>Excel to PDF</h3>
+                <p>Convert Excel spreadsheets and CSV files to PDF table format.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
+
+            <!-- PDF Editor - Ready -->
+            <div class="tool-card" onclick="openTool('pdf-editor')">
+                <span class="tool-icon">✏️</span>
+                <h3>PDF Editor</h3>
+                <p>Edit PDF documents with text, images, shapes, and annotations.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
+
+            <!-- PDF Organizer - Ready -->
+            <div class="tool-card" onclick="openTool('pdf-organizer')">
+                <span class="tool-icon">🗂️</span>
+                <h3>PDF Organizer</h3>
+                <p>Reorder, rotate, delete, and organize PDF pages with drag-and-drop.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
+
+            <!-- PDF Crop - Ready -->
+            <div class="tool-card" onclick="openTool('pdf-crop')">
+                <span class="tool-icon">✂️</span>
+                <h3>Crop PDF</h3>
+                <p>Crop PDF pages with interactive selection and preset options.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
+
+            <!-- PDF Compare - Ready -->
+            <div class="tool-card" onclick="openTool('pdf-compare')">
+                <span class="tool-icon">🔍</span>
+                <h3>Compare PDFs</h3>
+                <p>Compare two PDF documents and analyze differences in content and structure.</p>
+                <span class="tool-status status-ready">Ready</span>
+            </div>
+
+            <!-- PDF Password - Coming Soon -->
+            <div class="tool-card disabled">
+                <span class="tool-icon">🔒</span>
+                <h3>Protect PDF</h3>
+                <p>Add password protection and security settings to PDF documents.</p>
+                <span class="tool-status status-coming-soon">Coming Soon</span>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 PDF Pro Suite. All rights reserved. Fast, secure, and free PDF tools.</p>
+    </footer>
 
     <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-
-        class SimplePDFInserter {
-            constructor() {
-                this.pdfDoc = null;
-                this.pdfLibDoc = null;
-                this.currentPage = 0;
-                this.totalPages = 0;
-                this.zoomLevel = 1.0;
-                this.pngImages = [];
-                this.insertions = [];
-                this.selectedInsertion = null;
-                this.selectedPNG = null;
-                
-                this.isDragging = false;
-                this.dragOffset = { x: 0, y: 0 };
-                this.multiPageInsertion = null;
-                this.selectedPages = new Set();
-
-                this.initElements();
-                this.setupEvents();
-                this.showToast('Ready', 'success');
-            }
-
-            initElements() {
-                this.pdfInput = document.getElementById('pdf-input');
-                this.pngInput = document.getElementById('png-input');
-                this.pdfUpload = document.getElementById('pdf-upload');
-                this.pngUpload = document.getElementById('png-upload');
-                this.canvas = document.getElementById('pdf-canvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.placeholder = document.getElementById('placeholder');
-                this.loading = document.getElementById('loading');
-                this.overlay = document.getElementById('overlay');
-                this.pngList = document.getElementById('png-list');
-                this.queueList = document.getElementById('queue-list');
-                this.properties = document.getElementById('properties');
-                
-                this.prevBtn = document.getElementById('prev-btn');
-                this.nextBtn = document.getElementById('next-btn');
-                this.pageInfo = document.getElementById('page-info');
-                this.zoomInBtn = document.getElementById('zoom-in');
-                this.zoomOutBtn = document.getElementById('zoom-out');
-                this.fitWidthBtn = document.getElementById('fit-width');
-                this.fitPageBtn = document.getElementById('fit-page');
-                this.zoomInfo = document.getElementById('zoom-info');
-                this.exportBtn = document.getElementById('export-btn');
-                this.multiPageBtn = document.getElementById('multi-page-btn');
-                
-                this.multiPageModal = document.getElementById('multi-page-modal');
-                this.selectedPngInfo = document.getElementById('selected-png-info');
-                this.positionInfo = document.getElementById('position-info');
-                this.pageCheckboxes = document.getElementById('page-checkboxes');
-                this.selectAllPages = document.getElementById('select-all-pages');
-                this.deselectAllPages = document.getElementById('deselect-all-pages');
-                this.selectRange = document.getElementById('select-range');
-                this.rangeSelector = document.getElementById('range-selector');
-                this.rangeFrom = document.getElementById('range-from');
-                this.rangeTo = document.getElementById('range-to');
-                this.applyRange = document.getElementById('apply-range');
-                this.applyMultiPage = document.getElementById('apply-multi-page');
-                this.cancelMultiPage = document.getElementById('cancel-multi-page');
-
-                this.scaleSlider = document.getElementById('scale-slider');
-                this.scaleValue = document.getElementById('scale-value');
-                this.opacitySlider = document.getElementById('opacity-slider');
-                this.opacityValue = document.getElementById('opacity-value');
-                this.posXInput = document.getElementById('pos-x');
-                this.posYInput = document.getElementById('pos-y');
-                this.applyBtn = document.getElementById('apply-btn');
-                this.deleteBtn = document.getElementById('delete-btn');
-            }
-
-            setupEvents() {
-                this.pdfUpload.addEventListener('click', () => this.pdfInput.click());
-                this.pngUpload.addEventListener('click', () => this.pngInput.click());
-                this.pdfInput.addEventListener('change', (e) => this.loadPDF(e.target.files[0]));
-                this.pngInput.addEventListener('change', (e) => this.loadPNGs(Array.from(e.target.files)));
-
-                this.setupDragDrop();
-                this.setupInsertionDragging();
-
-                this.prevBtn.addEventListener('click', () => this.prevPage());
-                this.nextBtn.addEventListener('click', () => this.nextPage());
-                this.zoomInBtn.addEventListener('click', () => this.zoomIn());
-                this.zoomOutBtn.addEventListener('click', () => this.zoomOut());
-                this.fitWidthBtn.addEventListener('click', () => this.fitWidth());
-                this.fitPageBtn.addEventListener('click', () => this.fitPage());
-
-                this.canvas.addEventListener('click', (e) => this.canvasClick(e));
-
-                this.scaleSlider.addEventListener('input', (e) => this.scaleChange(e.target.value));
-                this.opacitySlider.addEventListener('input', (e) => this.opacityChange(e.target.value));
-                this.applyBtn.addEventListener('click', () => this.applyProperties());
-                this.deleteBtn.addEventListener('click', () => this.deleteInsertion());
-
-                this.exportBtn.addEventListener('click', () => this.exportPDF());
-                this.multiPageBtn.addEventListener('click', () => this.openMultiPageModal());
-                
-                this.selectAllPages.addEventListener('click', () => this.selectAllPagesFunc());
-                this.deselectAllPages.addEventListener('click', () => this.deselectAllPagesFunc());
-                this.selectRange.addEventListener('click', () => this.showRangeSelector());
-                this.applyRange.addEventListener('click', () => this.applyRangeSelection());
-                this.applyMultiPage.addEventListener('click', () => this.applyMultiPageInsert());
-                this.cancelMultiPage.addEventListener('click', () => this.closeMultiPageModal());
-            }
-
-            setupDragDrop() {
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    document.addEventListener(eventName, (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    });
-                });
-
-                this.pdfUpload.addEventListener('drop', (e) => {
-                    const files = Array.from(e.dataTransfer.files);
-                    const pdfFile = files.find(f => f.type === 'application/pdf');
-                    if (pdfFile) this.loadPDF(pdfFile);
-                });
-
-                this.pngUpload.addEventListener('drop', (e) => {
-                    const files = Array.from(e.dataTransfer.files);
-                    const imageFiles = files.filter(f => f.type.startsWith('image/'));
-                    if (imageFiles.length > 0) this.loadPNGs(imageFiles);
-                });
-
-                this.canvas.addEventListener('dragover', (e) => {
-                    if (e.dataTransfer.types.includes('application/png-item')) {
-                        this.canvas.style.opacity = '0.8';
-                    }
-                });
-
-                this.canvas.addEventListener('dragleave', () => {
-                    this.canvas.style.opacity = '1';
-                });
-
-                this.canvas.addEventListener('drop', (e) => {
-                    this.canvas.style.opacity = '1';
-                    const pngId = e.dataTransfer.getData('application/png-item');
-                    if (pngId) {
-                        const rect = this.canvas.getBoundingClientRect();
-                        const x = (e.clientX - rect.left) / this.zoomLevel;
-                        const y = (e.clientY - rect.top) / this.zoomLevel;
-                        this.insertPNG(pngId, x, y);
-                        this.showToast('Image placed', 'success');
-                    }
-                });
-            }
-
-            setupInsertionDragging() {
-                this.overlay.addEventListener('mousedown', (e) => this.startDrag(e));
-                document.addEventListener('mousemove', (e) => this.drag(e));
-                document.addEventListener('mouseup', () => this.endDrag());
-            }
-
-            startDrag(e) {
-                const element = e.target.closest('.png-insertion');
-                if (!element) return;
-
-                const insertionId = element.dataset.insertionId;
-                const insertion = this.insertions.find(i => i.id === insertionId);
-                if (!insertion) return;
-
-                this.isDragging = true;
-                this.selectedInsertion = insertion;
-                
-                const rect = this.canvas.getBoundingClientRect();
-                const elementRect = element.getBoundingClientRect();
-                
-                this.dragOffset.x = e.clientX - elementRect.left;
-                this.dragOffset.y = e.clientY - elementRect.top;
-                
-                this.canvas.style.cursor = 'grabbing';
-                e.preventDefault();
-            }
-
-            drag(e) {
-                if (!this.isDragging || !this.selectedInsertion) return;
-
-                const rect = this.canvas.getBoundingClientRect();
-                const newX = (e.clientX - rect.left - this.dragOffset.x) / this.zoomLevel;
-                const newY = (e.clientY - rect.top - this.dragOffset.y) / this.zoomLevel;
-                
-                const maxX = (this.canvas.width / this.zoomLevel) - this.selectedInsertion.width;
-                const maxY = (this.canvas.height / this.zoomLevel) - this.selectedInsertion.height;
-                
-                this.selectedInsertion.x = Math.max(0, Math.min(newX, maxX));
-                this.selectedInsertion.y = Math.max(0, Math.min(newY, maxY));
-                
-                this.updateOverlay();
-            }
-
-            endDrag() {
-                if (!this.isDragging) return;
-                this.isDragging = false;
-                this.canvas.style.cursor = 'crosshair';
-                if (this.selectedInsertion) {
-                    this.updateQueue();
-                    this.showProperties();
-                }
-            }
-
-            async loadPDF(file) {
-                if (!file || file.type !== 'application/pdf') {
-                    this.showToast('Invalid PDF file', 'error');
-                    return;
-                }
-
-                try {
-                    this.showToast('Loading PDF...', 'info');
-                    this.placeholder.style.display = 'none';
-                    this.loading.style.display = 'block';
-                    this.canvas.style.display = 'none';
-
-                    const arrayBuffer = await file.arrayBuffer();
-                    this.pdfLibDoc = await PDFLib.PDFDocument.load(arrayBuffer);
-                    
-                    const typedArray = new Uint8Array(arrayBuffer);
-                    this.pdfDoc = await pdfjsLib.getDocument({
-                        data: typedArray,
-                        cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
-                        cMapPacked: true
-                    }).promise;
-                    
-                    this.totalPages = this.pdfDoc.numPages;
-                    this.currentPage = 0;
-
-                    await this.renderPage();
-                    this.updateControls();
-                    this.loading.style.display = 'none';
-                    this.canvas.style.display = 'block';
-                    this.exportBtn.disabled = false;
-
-                    this.showToast(`PDF loaded: ${this.totalPages} pages`, 'success');
-                } catch (error) {
-                    console.error('PDF error:', error);
-                    this.showToast('PDF load failed', 'error');
-                    this.loading.style.display = 'none';
-                    this.placeholder.style.display = 'block';
-                }
-            }
-
-            async loadPNGs(files) {
-                for (const file of files) {
-                    if (!file.type.startsWith('image/')) continue;
-
-                    try {
-                        const id = 'png-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-                        const url = URL.createObjectURL(file);
-
-                        const img = new Image();
-                        await new Promise((resolve, reject) => {
-                            img.onload = resolve;
-                            img.onerror = reject;
-                            img.src = url;
-                        });
-
-                        const pngItem = { id, name: file.name, file, url, width: img.width, height: img.height };
-                        this.pngImages.push(pngItem);
-                        this.renderPNGItem(pngItem);
-                    } catch (error) {
-                        console.error('Image error:', error);
-                    }
-                }
-                this.showToast(`${files.length} images loaded`, 'success');
-            }
-
-            renderPNGItem(pngItem) {
-                const item = document.createElement('div');
-                item.className = 'png-item';
-                item.draggable = true;
-                item.dataset.pngId = pngItem.id;
-
-                item.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('application/png-item', pngItem.id);
-                    e.dataTransfer.effectAllowed = 'copy';
-                    item.style.opacity = '0.5';
-                });
-
-                item.addEventListener('dragend', () => {
-                    item.style.opacity = '1';
-                });
-
-                item.addEventListener('click', () => this.selectPNG(pngItem));
-
-                item.innerHTML = `
-                    <img src="${pngItem.url}" alt="${pngItem.name}">
-                    <div>
-                        <div style="font-size: 11px; font-weight: 500;">${pngItem.name}</div>
-                        <div style="font-size: 10px; color: #999;">${pngItem.width}×${pngItem.height}</div>
-                    </div>
-                `;
-
-                this.pngList.appendChild(item);
-            }
-
-            selectPNG(pngItem) {
-                document.querySelectorAll('.png-item').forEach(item => {
-                    item.classList.remove('selected');
-                });
-                document.querySelector(`[data-png-id="${pngItem.id}"]`).classList.add('selected');
-                this.selectedPNG = pngItem;
-                this.canvas.style.cursor = 'copy';
-            }
-
-            async renderPage() {
-                if (!this.pdfDoc) return;
-
-                try {
-                    const page = await this.pdfDoc.getPage(this.currentPage + 1);
-                    const viewport = page.getViewport({ scale: this.zoomLevel });
-
-                    this.canvas.width = viewport.width;
-                    this.canvas.height = viewport.height;
-                    this.canvas.style.width = viewport.width + 'px';
-                    this.canvas.style.height = viewport.height + 'px';
-
-                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-                    const renderContext = {
-                        canvasContext: this.ctx,
-                        viewport: viewport
-                    };
-
-                    await page.render(renderContext).promise;
-                    setTimeout(() => this.updateOverlay(), 50);
-                } catch (error) {
-                    console.error('Render error:', error);
-                }
-            }
-
-            updateOverlay() {
-                this.overlay.innerHTML = '';
-                
-                const canvasRect = this.canvas.getBoundingClientRect();
-                const containerRect = this.canvas.parentElement.getBoundingClientRect();
-                
-                this.overlay.style.left = (canvasRect.left - containerRect.left) + 'px';
-                this.overlay.style.top = (canvasRect.top - containerRect.top) + 'px';
-                this.overlay.style.width = this.canvas.width + 'px';
-                this.overlay.style.height = this.canvas.height + 'px';
-
-                this.insertions
-                    .filter(insertion => insertion.page === this.currentPage)
-                    .forEach(insertion => {
-                        const pngItem = this.pngImages.find(p => p.id === insertion.pngId);
-                        
-                        const element = document.createElement('div');
-                        element.className = 'png-insertion';
-                        element.style.left = (insertion.x * this.zoomLevel) + 'px';
-                        element.style.top = (insertion.y * this.zoomLevel) + 'px';
-                        element.style.width = (insertion.width * this.zoomLevel) + 'px';
-                        element.style.height = (insertion.height * this.zoomLevel) + 'px';
-                        element.style.backgroundImage = `url(${pngItem.url})`;
-                        element.style.opacity = insertion.opacity / 100;
-                        element.dataset.insertionId = insertion.id;
-
-                        if (this.selectedInsertion && this.selectedInsertion.id === insertion.id) {
-                            element.classList.add('selected');
-                        }
-
-                        element.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            this.selectInsertion(insertion);
-                        });
-
-                        this.overlay.appendChild(element);
-                    });
-            }
-
-            canvasClick(e) {
-                if (this.isDragging) return;
-                
-                const rect = this.canvas.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / this.zoomLevel;
-                const y = (e.clientY - rect.top) / this.zoomLevel;
-
-                if (this.selectedPNG) {
-                    this.insertPNG(this.selectedPNG.id, x, y);
-                    this.selectedPNG = null;
-                    this.canvas.style.cursor = 'crosshair';
-                    document.querySelectorAll('.png-item').forEach(item => {
-                        item.classList.remove('selected');
-                    });
-                }
-            }
-
-            insertPNG(pngId, x, y) {
-                const pngItem = this.pngImages.find(p => p.id === pngId);
-                if (!pngItem) return;
-
-                const insertion = {
-                    id: 'insertion-' + Date.now(),
-                    pngId: pngId,
-                    page: this.currentPage,
-                    x, y,
-                    width: Math.min(150, pngItem.width * 0.3),
-                    height: Math.min(150, pngItem.height * 0.3),
-                    scale: 100,
-                    opacity: 100,
-                    originalWidth: pngItem.width,
-                    originalHeight: pngItem.height
-                };
-
-                this.insertions.push(insertion);
-                this.updateOverlay();
-                this.updateQueue();
-                this.multiPageBtn.disabled = false;
-            }
-
-            selectInsertion(insertion) {
-                this.selectedInsertion = insertion;
-                this.updateOverlay();
-                this.showProperties();
-            }
-
-            showProperties() {
-                if (!this.selectedInsertion) return;
-
-                const insertion = this.selectedInsertion;
-                this.scaleSlider.value = insertion.scale;
-                this.scaleValue.textContent = insertion.scale + '%';
-                this.opacitySlider.value = insertion.opacity;
-                this.opacityValue.textContent = insertion.opacity + '%';
-                this.posXInput.value = Math.round(insertion.x);
-                this.posYInput.value = Math.round(insertion.y);
-
-                this.properties.style.display = 'block';
-            }
-
-            scaleChange(value) {
-                this.scaleValue.textContent = value + '%';
-                if (this.selectedInsertion) {
-                    const scale = value / 100;
-                    const insertion = this.selectedInsertion;
-                    const baseWidth = insertion.originalWidth * 0.3;
-                    const baseHeight = insertion.originalHeight * 0.3;
-                    insertion.width = baseWidth * scale;
-                    insertion.height = baseHeight * scale;
-                    insertion.scale = parseFloat(value);
-                    this.updateOverlay();
-                }
-            }
-
-            opacityChange(value) {
-                this.opacityValue.textContent = value + '%';
-                if (this.selectedInsertion) {
-                    this.selectedInsertion.opacity = parseFloat(value);
-                    this.updateOverlay();
-                }
-            }
-
-            applyProperties() {
-                if (this.selectedInsertion) {
-                    this.selectedInsertion.x = parseInt(this.posXInput.value) || 0;
-                    this.selectedInsertion.y = parseInt(this.posYInput.value) || 0;
-                    this.updateOverlay();
-                    this.updateQueue();
-                }
-            }
-
-            deleteInsertion() {
-                if (this.selectedInsertion) {
-                    this.insertions = this.insertions.filter(i => i.id !== this.selectedInsertion.id);
-                    this.selectedInsertion = null;
-                    this.properties.style.display = 'none';
-                    this.updateOverlay();
-                    this.updateQueue();
-                    if (this.insertions.length === 0) this.multiPageBtn.disabled = true;
-                }
-            }
-
-            updateQueue() {
-                if (this.insertions.length === 0) {
-                    this.queueList.innerHTML = '<div style="color: #666; font-size: 11px;">No insertions yet</div>';
-                    return;
-                }
-
-                this.queueList.innerHTML = this.insertions.map(insertion => {
-                    const pngItem = this.pngImages.find(p => p.id === insertion.pngId);
-                    return `
-                        <div class="queue-item" data-insertion-id="${insertion.id}">
-                            <div style="font-weight: 500;">${pngItem.name}</div>
-                            <div>Page ${insertion.page + 1} • ${Math.round(insertion.x)},${Math.round(insertion.y)}</div>
-                        </div>
-                    `;
-                }).join('');
-
-                this.queueList.querySelectorAll('.queue-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        const insertion = this.insertions.find(i => i.id === item.dataset.insertionId);
-                        if (insertion) {
-                            this.currentPage = insertion.page;
-                            this.renderPage();
-                            this.updateControls();
-                            this.selectInsertion(insertion);
-                        }
-                    });
-                });
-            }
-
-            updateControls() {
-                this.pageInfo.textContent = `Page ${this.currentPage + 1} / ${this.totalPages}`;
-                this.zoomInfo.textContent = Math.round(this.zoomLevel * 100) + '%';
-                this.prevBtn.disabled = this.currentPage === 0;
-                this.nextBtn.disabled = this.currentPage === this.totalPages - 1;
-            }
-
-            async prevPage() {
-                if (this.currentPage > 0) {
-                    this.currentPage--;
-                    await this.renderPage();
-                    this.updateControls();
-                    this.properties.style.display = 'none';
-                }
-            }
-
-            async nextPage() {
-                if (this.currentPage < this.totalPages - 1) {
-                    this.currentPage++;
-                    await this.renderPage();
-                    this.updateControls();
-                    this.properties.style.display = 'none';
-                }
-            }
-
-            async zoomIn() {
-                this.zoomLevel = Math.min(this.zoomLevel * 1.2, 3.0);
-                await this.renderPage();
-                this.updateControls();
-            }
-
-            async zoomOut() {
-                this.zoomLevel = Math.max(this.zoomLevel * 0.8, 0.3);
-                await this.renderPage();
-                this.updateControls();
-            }
-
-            async fitWidth() {
-                if (!this.pdfDoc) return;
-                const page = await this.pdfDoc.getPage(this.currentPage + 1);
-                const viewport = page.getViewport({ scale: 1.0 });
-                const container = this.canvas.parentElement;
-                this.zoomLevel = (container.clientWidth - 40) / viewport.width;
-                await this.renderPage();
-                this.updateControls();
-            }
-
-            async fitPage() {
-                if (!this.pdfDoc) return;
-                const page = await this.pdfDoc.getPage(this.currentPage + 1);
-                const viewport = page.getViewport({ scale: 1.0 });
-                const container = this.canvas.parentElement;
-                const scaleX = (container.clientWidth - 40) / viewport.width;
-                const scaleY = (container.clientHeight - 40) / viewport.height;
-                this.zoomLevel = Math.min(scaleX, scaleY);
-                await this.renderPage();
-                this.updateControls();
-            }
-
-            async exportPDF() {
-                if (!this.pdfLibDoc || this.insertions.length === 0) {
-                    this.showToast('No images to export', 'error');
-                    return;
-                }
-
-                try {
-                    this.showToast('Exporting...', 'info');
-                    const pdfBytes = await this.pdfLibDoc.save();
-                    const newDoc = await PDFLib.PDFDocument.load(pdfBytes);
-
-                    const insertionsByPage = {};
-                    this.insertions.forEach(insertion => {
-                        if (!insertionsByPage[insertion.page]) {
-                            insertionsByPage[insertion.page] = [];
-                        }
-                        insertionsByPage[insertion.page].push(insertion);
-                    });
-
-                    for (const [pageIndex, pageInsertions] of Object.entries(insertionsByPage)) {
-                        const page = newDoc.getPage(parseInt(pageIndex));
-                        const { height: pageHeight } = page.getSize();
-
-                        for (const insertion of pageInsertions) {
-                            const pngItem = this.pngImages.find(p => p.id === insertion.pngId);
-                            if (!pngItem) continue;
-
-                            const pngBytes = await pngItem.file.arrayBuffer();
-                            let pngImage;
-
-                            if (pngItem.file.type === 'image/png') {
-                                pngImage = await newDoc.embedPng(pngBytes);
-                            } else if (pngItem.file.type === 'image/jpeg' || pngItem.file.type === 'image/jpg') {
-                                pngImage = await newDoc.embedJpg(pngBytes);
-                            } else {
-                                continue;
-                            }
-
-                            page.drawImage(pngImage, {
-                                x: insertion.x,
-                                y: pageHeight - insertion.y - insertion.height,
-                                width: insertion.width,
-                                height: insertion.height,
-                                opacity: insertion.opacity / 100
-                            });
-                        }
-                    }
-
-                    const finalBytes = await newDoc.save();
-                    const blob = new Blob([finalBytes], { type: 'application/pdf' });
-                    const url = URL.createObjectURL(blob);
-
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'pdf-with-images.pdf';
-                    a.click();
-
-                    URL.revokeObjectURL(url);
-                    this.showToast('PDF exported', 'success');
-                } catch (error) {
-                    console.error('Export error:', error);
-                    this.showToast('Export failed', 'error');
-                }
-            }
-
-            openMultiPageModal() {
-                if (!this.selectedInsertion) {
-                    this.showToast('Select an image first', 'error');
-                    return;
-                }
-                
-                this.multiPageInsertion = this.selectedInsertion;
-                const pngItem = this.pngImages.find(p => p.id === this.multiPageInsertion.pngId);
-                this.selectedPngInfo.textContent = `${pngItem.name} (${Math.round(this.multiPageInsertion.width)}×${Math.round(this.multiPageInsertion.height)})`;
-                this.positionInfo.textContent = `X: ${Math.round(this.multiPageInsertion.x)}, Y: ${Math.round(this.multiPageInsertion.y)}`;
-                
-                this.pageCheckboxes.innerHTML = '';
-                this.selectedPages.clear();
-                
-                for (let i = 0; i < this.totalPages; i++) {
-                    const checkbox = document.createElement('label');
-                    checkbox.className = 'page-checkbox';
-                    if (i === this.currentPage) checkbox.classList.add('current');
-                    
-                    const input = document.createElement('input');
-                    input.type = 'checkbox';
-                    input.value = i;
-                    
-                    if (i === this.currentPage) {
-                        input.checked = true;
-                        input.disabled = true;
-                        this.selectedPages.add(i);
-                    }
-                    
-                    input.addEventListener('change', (e) => {
-                        if (e.target.checked) {
-                            this.selectedPages.add(i);
-                        } else {
-                            this.selectedPages.delete(i);
-                        }
-                    });
-                    
-                    checkbox.appendChild(input);
-                    checkbox.appendChild(document.createTextNode(i === this.currentPage ? `${i + 1}*` : `${i + 1}`));
-                    this.pageCheckboxes.appendChild(checkbox);
-                }
-                
-                this.multiPageModal.style.display = 'flex';
-            }
-            
-            closeMultiPageModal() {
-                this.multiPageModal.style.display = 'none';
-                this.multiPageInsertion = null;
-                this.selectedPages.clear();
-            }
-            
-            selectAllPagesFunc() {
-                const checkboxes = this.pageCheckboxes.querySelectorAll('input[type="checkbox"]');
-                checkboxes.forEach((checkbox, index) => {
-                    if (!checkbox.disabled) {
-                        checkbox.checked = true;
-                        this.selectedPages.add(index);
-                    }
-                });
-            }
-            
-            deselectAllPagesFunc() {
-                const checkboxes = this.pageCheckboxes.querySelectorAll('input[type="checkbox"]');
-                checkboxes.forEach((checkbox, index) => {
-                    if (!checkbox.disabled) {
-                        checkbox.checked = false;
-                        this.selectedPages.delete(index);
-                    }
-                });
-            }
-            
-            showRangeSelector() {
-                this.rangeSelector.style.display = 'block';
-                this.rangeFrom.max = this.totalPages;
-                this.rangeTo.max = this.totalPages;
-            }
-            
-            applyRangeSelection() {
-                const from = parseInt(this.rangeFrom.value) - 1;
-                const to = parseInt(this.rangeTo.value) - 1;
-                
-                if (isNaN(from) || isNaN(to) || from < 0 || to >= this.totalPages || from > to) {
-                    this.showToast('Invalid range', 'error');
-                    return;
-                }
-                
-                const checkboxes = this.pageCheckboxes.querySelectorAll('input[type="checkbox"]');
-                checkboxes.forEach((checkbox, index) => {
-                    if (!checkbox.disabled && index >= from && index <= to) {
-                        checkbox.checked = true;
-                        this.selectedPages.add(index);
-                    }
-                });
-                
-                this.rangeSelector.style.display = 'none';
-                this.rangeFrom.value = '';
-                this.rangeTo.value = '';
-            }
-            
-            applyMultiPageInsert() {
-                if (!this.multiPageInsertion || this.selectedPages.size === 0) {
-                    this.showToast('No pages selected', 'error');
-                    return;
-                }
-                
-                let insertCount = 0;
-                this.selectedPages.forEach(pageIndex => {
-                    if (pageIndex === this.currentPage) return;
-                    
-                    const exists = this.insertions.some(ins => 
-                        ins.page === pageIndex && 
-                        ins.pngId === this.multiPageInsertion.pngId &&
-                        Math.abs(ins.x - this.multiPageInsertion.x) < 5 &&
-                        Math.abs(ins.y - this.multiPageInsertion.y) < 5
-                    );
-                    
-                    if (!exists) {
-                        const newInsertion = {
-                            id: 'insertion-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-                            pngId: this.multiPageInsertion.pngId,
-                            page: pageIndex,
-                            x: this.multiPageInsertion.x,
-                            y: this.multiPageInsertion.y,
-                            width: this.multiPageInsertion.width,
-                            height: this.multiPageInsertion.height,
-                            scale: this.multiPageInsertion.scale,
-                            opacity: this.multiPageInsertion.opacity,
-                            originalWidth: this.multiPageInsertion.originalWidth,
-                            originalHeight: this.multiPageInsertion.originalHeight
-                        };
-                        this.insertions.push(newInsertion);
-                        insertCount++;
-                    }
-                });
-                
-                this.updateOverlay();
-                this.updateQueue();
-                this.closeMultiPageModal();
-                
-                if (insertCount > 0) {
-                    this.showToast(`Added to ${insertCount} pages`, 'success');
-                }
-            }
-
-            showToast(message, type = 'info') {
-                document.querySelectorAll('.toast').forEach(toast => toast.remove());
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.textContent = message;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 2000);
+        function openTool(toolName) {
+            switch(toolName) {
+                case 'png-inserter':
+                    window.location.href = 'png-inserter.html';
+                    break;
+                case 'extract-pages':
+                    window.location.href = 'extract-pages.html';
+                    break;
+                case 'merge-pdfs':
+                    window.location.href = 'merge-pdfs.html';
+                    break;
+                case 'split-pdf':
+                    window.location.href = 'split-pdf.html';
+                    break;
+                case 'compress-pdf':
+                    window.location.href = 'compress-pdf.html';
+                    break;
+                case 'pdf-to-jpg':
+                    window.location.href = 'pdf-to-jpg.html';
+                    break;
+                case 'jpg-to-pdf':
+                    window.location.href = 'jpg-to-pdf.html';
+                    break;
+                case 'pdf-to-word':
+                    window.location.href = 'pdf-to-word.html';
+                    break;
+                case 'pdf-to-powerpoint':
+                    window.location.href = 'pdf-to-powerpoint.html';
+                    break;
+                case 'pdf-to-excel':
+                    window.location.href = 'pdf-to-excel.html';
+                    break;
+                case 'word-to-pdf':
+                    window.location.href = 'word-to-pdf.html';
+                    break;
+                case 'docx-to-pdf':
+                    window.location.href = 'docx-to-pdf.html';
+                    break;
+                case 'powerpoint-to-pdf':
+                    window.location.href = 'powerpoint-to-pdf.html';
+                    break;
+                case 'pptx-to-pdf':
+                    window.location.href = 'pptx-to-pdf.html';
+                    break;
+                case 'excel-to-pdf':
+                    window.location.href = 'excel-to-pdf.html';
+                    break;
+                case 'pdf-editor':
+                    window.location.href = 'pdf-editor.html';
+                    break;
+                case 'pdf-organizer':
+                    window.location.href = 'pdf-organizer.html';
+                    break;
+                case 'pdf-crop':
+                    window.location.href = 'pdf-crop.html';
+                    break;
+                case 'pdf-compare':
+                    window.location.href = 'pdf-compare.html';
+                    break;
+                default:
+                    alert('This tool is coming soon! 🚀');
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            new SimplePDFInserter();
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to header
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(26, 26, 26, 0.98)';
+            } else {
+                header.style.background = 'rgba(26, 26, 26, 0.95)';
+            }
         });
     </script>
 </body>

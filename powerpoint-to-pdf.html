@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerPoint to PDF Converter - PDF Pro Suite</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #00ff88;
+        }
+        
+        .back-btn {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+        
+        .main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 50px);
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: #141414;
+            border-right: 1px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .upload-section {
+            margin-bottom: 30px;
+        }
+        
+        .upload-box {
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #1a1a1a;
+            transition: all 0.3s;
+        }
+        
+        .upload-box:hover {
+            border-color: #00ff88;
+            background: #1e1e1e;
+        }
+        
+        .upload-box.dragover {
+            border-color: #00ff88;
+            background: #002a1a;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.7;
+        }
+        
+        .viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+        }
+        
+        .controls {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: auto;
+            background: #222;
+        }
+        
+        .image-list {
+            margin-top: 20px;
+        }
+        
+        .image-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .image-thumbnail {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background: #333;
+        }
+        
+        .image-info {
+            flex: 1;
+        }
+        
+        .image-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+        
+        .image-details {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #333;
+            border-color: #555;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary { 
+            background: #00ff88; 
+            color: #000; 
+            border-color: #00ff88;
+        }
+        
+        .btn-primary:hover { 
+            background: #00cc70;
+            border-color: #00cc70;
+        }
+        
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+        
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+            border-color: #ff4757;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            background: #222;
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: #ccc;
+        }
+        
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+        }
+        
+        .placeholder h3 {
+            margin-bottom: 10px;
+            color: #999;
+            font-size: 24px;
+        }
+        
+        .placeholder p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #00ff88;
+            color: #000;
+        }
+        
+        .toast.error {
+            background: #ff4757;
+        }
+        
+        .toast.info {
+            background: #3742fa;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #00ff88;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        
+        .warning-box {
+            background: #2a1a00;
+            border: 1px solid #ffa500;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .warning-box h4 {
+            color: #ffa500;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        
+        .warning-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .warning-box li {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 5px;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        .warning-box li::before {
+            content: '⚠️';
+            position: absolute;
+            left: 0;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .grid-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .grid-thumbnail {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background: #333;
+        }
+        
+        .grid-info {
+            font-size: 11px;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📊 PowerPoint to PDF Converter</h1>
+        <a href="index.html" class="back-btn">← Back to Tools</a>
+    </header>
+
+    <main class="main">
+        <div class="sidebar">
+            <div class="upload-section">
+                <div class="section-title">Upload Images from Slides</div>
+                <div class="upload-box" id="uploadBox">
+                    <span class="upload-icon">🖼️</span>
+                    <div>Drop slide images here or click to browse</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">PNG, JPG supported from PowerPoint exports</div>
+                </div>
+                <input type="file" id="imageInput" accept="image/*" multiple style="display: none">
+            </div>
+
+            <div class="image-list" id="imageList" style="display: none;">
+                <div class="section-title">Slide Images</div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="imageCount">0</div>
+                        <div class="stat-label">Slides</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalSize">0</div>
+                        <div class="stat-label">Total Size</div>
+                    </div>
+                </div>
+
+                <div style="font-size: 12px; color: #999; margin-bottom: 15px;">
+                    💡 Images will be converted to PDF pages in order
+                </div>
+
+                <div id="imageItems"></div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-primary" id="convertBtn" style="width: 100%;" disabled>Create PDF</button>
+                </div>
+
+                <div class="warning-box">
+                    <h4>📊 PowerPoint to PDF Notes</h4>
+                    <ul>
+                        <li>Export PowerPoint slides as images first</li>
+                        <li>Upload slide images in presentation order</li>
+                        <li>Each image becomes one PDF page</li>
+                        <li>Maintains original slide aspect ratios</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="viewer">
+            <div class="controls" id="controls" style="display: none;">
+                <div id="previewInfo" style="color: #ccc; font-size: 14px;">Images loaded successfully</div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-small" id="clearAllBtn">Clear All</button>
+                    <button class="btn btn-small" id="previewPdfBtn">Preview PDF</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="placeholder" id="placeholder">
+                    <h3>📊 PowerPoint to PDF</h3>
+                    <p>Convert PowerPoint slide images to PDF document</p>
+                    <div style="font-size: 14px; color: #777; margin-top: 20px;">
+                        📤 Export slides from PowerPoint as images<br>
+                        📂 Upload the slide images here<br>
+                        📄 Get a professional PDF document<br>
+                        🔄 Maintains original slide layouts
+                    </div>
+                    <div style="font-size: 13px; color: #ffa500; margin-top: 20px; font-weight: 500;">
+                        💡 How to export slides from PowerPoint:<br>
+                        File → Export → Change File Type → PNG/JPG
+                    </div>
+                </div>
+                <div class="loading" id="loading">
+                    <div>Creating PDF from slides...</div>
+                </div>
+                <div class="image-grid" id="imageGrid"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        class PowerPointToPDFConverter {
+            constructor() {
+                this.images = [];
+
+                this.uploadBox = document.getElementById('uploadBox');
+                this.imageInput = document.getElementById('imageInput');
+                this.imageList = document.getElementById('imageList');
+                this.controls = document.getElementById('controls');
+                this.placeholder = document.getElementById('placeholder');
+                this.loading = document.getElementById('loading');
+                this.imageGrid = document.getElementById('imageGrid');
+
+                this.setupEvents();
+            }
+
+            setupEvents() {
+                this.uploadBox.addEventListener('click', () => this.imageInput.click());
+                this.imageInput.addEventListener('change', (e) => this.loadImages(Array.from(e.target.files)));
+
+                this.setupDragDrop();
+
+                document.getElementById('convertBtn').addEventListener('click', () => this.convertToPDF());
+                document.getElementById('clearAllBtn').addEventListener('click', () => this.clearAll());
+                document.getElementById('previewPdfBtn').addEventListener('click', () => this.togglePreview());
+            }
+
+            setupDragDrop() {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    document.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+
+                this.uploadBox.addEventListener('dragover', () => {
+                    this.uploadBox.classList.add('dragover');
+                });
+
+                this.uploadBox.addEventListener('dragleave', () => {
+                    this.uploadBox.classList.remove('dragover');
+                });
+
+                this.uploadBox.addEventListener('drop', (e) => {
+                    this.uploadBox.classList.remove('dragover');
+                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                    if (files.length > 0) this.loadImages(files);
+                });
+            }
+
+            async loadImages(files) {
+                if (files.length === 0) {
+                    this.showToast('Please select image files', 'error');
+                    return;
+                }
+
+                this.showToast(`Loading ${files.length} slide image(s)...`, 'info');
+
+                for (const file of files) {
+                    if (!file.type.startsWith('image/')) continue;
+
+                    try {
+                        const imageData = await this.loadImageData(file);
+                        const image = {
+                            id: Date.now() + Math.random(),
+                            file: file,
+                            name: file.name,
+                            size: file.size,
+                            url: imageData.url,
+                            width: imageData.width,
+                            height: imageData.height
+                        };
+
+                        this.images.push(image);
+                    } catch (error) {
+                        console.error(`Error loading ${file.name}:`, error);
+                        this.showToast(`Failed to load ${file.name}`, 'error');
+                    }
+                }
+
+                // Sort images by filename for proper slide order
+                this.images.sort((a, b) => {
+                    const aMatch = a.name.match(/(\d+)/);
+                    const bMatch = b.name.match(/(\d+)/);
+                    if (aMatch && bMatch) {
+                        return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+                    }
+                    return a.name.localeCompare(b.name);
+                });
+
+                this.updateUI();
+                this.showToast(`Loaded ${this.images.length} slide image(s)`, 'success');
+            }
+
+            async loadImageData(file) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    const url = URL.createObjectURL(file);
+                    
+                    img.onload = () => {
+                        resolve({
+                            url: url,
+                            width: img.width,
+                            height: img.height
+                        });
+                    };
+                    
+                    img.onerror = reject;
+                    img.src = url;
+                });
+            }
+
+            updateUI() {
+                if (this.images.length > 0) {
+                    this.placeholder.style.display = 'none';
+                    this.imageList.style.display = 'block';
+                    this.controls.style.display = 'flex';
+                    
+                    this.renderImageList();
+                    this.renderImageGrid();
+                    this.updateStats();
+                }
+            }
+
+            renderImageList() {
+                const imageItems = document.getElementById('imageItems');
+                imageItems.innerHTML = '';
+
+                this.images.forEach((image, index) => {
+                    const imageItem = document.createElement('div');
+                    imageItem.className = 'image-item';
+
+                    imageItem.innerHTML = `
+                        <img src="${image.url}" class="image-thumbnail" alt="${image.name}">
+                        <div class="image-info">
+                            <div class="image-name">Slide ${index + 1}: ${image.name}</div>
+                            <div class="image-details">${image.width} × ${image.height} px • ${this.formatFileSize(image.size)}</div>
+                        </div>
+                        <button class="btn btn-small btn-danger" onclick="powerPointToPdfConverter.removeImage(${index})">Remove</button>
+                    `;
+
+                    imageItems.appendChild(imageItem);
+                });
+            }
+
+            renderImageGrid() {
+                this.imageGrid.innerHTML = '';
+
+                this.images.forEach((image, index) => {
+                    const gridItem = document.createElement('div');
+                    gridItem.className = 'grid-item';
+
+                    gridItem.innerHTML = `
+                        <img src="${image.url}" class="grid-thumbnail" alt="${image.name}">
+                        <div class="grid-info">Slide ${index + 1}</div>
+                    `;
+
+                    this.imageGrid.appendChild(gridItem);
+                });
+            }
+
+            removeImage(index) {
+                const imageName = this.images[index].name;
+                URL.revokeObjectURL(this.images[index].url);
+                this.images.splice(index, 1);
+                
+                if (this.images.length === 0) {
+                    this.imageList.style.display = 'none';
+                    this.controls.style.display = 'none';
+                    this.placeholder.style.display = 'flex';
+                    this.imageGrid.innerHTML = '';
+                } else {
+                    this.renderImageList();
+                    this.renderImageGrid();
+                    this.updateStats();
+                }
+                
+                this.showToast(`Removed ${imageName}`, 'success');
+            }
+
+            clearAll() {
+                this.images.forEach(image => URL.revokeObjectURL(image.url));
+                this.images = [];
+                this.imageList.style.display = 'none';
+                this.controls.style.display = 'none';
+                this.placeholder.style.display = 'flex';
+                this.imageGrid.innerHTML = '';
+                this.showToast('All slides cleared', 'success');
+            }
+
+            togglePreview() {
+                if (this.imageGrid.style.display === 'none') {
+                    this.imageGrid.style.display = 'grid';
+                } else {
+                    this.imageGrid.style.display = 'none';
+                }
+            }
+
+            async convertToPDF() {
+                if (this.images.length === 0) {
+                    this.showToast('Please add slide images first', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Converting slides to PDF...', 'info');
+                    this.loading.style.display = 'block';
+                    this.imageGrid.style.display = 'none';
+                    document.getElementById('convertBtn').disabled = true;
+                    
+                    const pdfDoc = await PDFLib.PDFDocument.create();
+
+                    for (const image of this.images) {
+                        // Convert image to PDF page
+                        const imageBytes = await this.getImageBytes(image.file);
+                        let pdfImage;
+
+                        if (image.file.type === 'image/jpeg' || image.file.type === 'image/jpg') {
+                            pdfImage = await pdfDoc.embedJpg(imageBytes);
+                        } else {
+                            pdfImage = await pdfDoc.embedPng(imageBytes);
+                        }
+
+                        // Create page with slide dimensions (maintain aspect ratio)
+                        const aspectRatio = image.width / image.height;
+                        let pageWidth, pageHeight;
+                        
+                        if (aspectRatio > 1) {
+                            // Landscape slide
+                            pageWidth = 842; // A4 landscape width
+                            pageHeight = pageWidth / aspectRatio;
+                        } else {
+                            // Portrait slide
+                            pageHeight = 595; // A4 width as height
+                            pageWidth = pageHeight * aspectRatio;
+                        }
+
+                        const page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+                        // Draw image to fill the entire page
+                        page.drawImage(pdfImage, {
+                            x: 0,
+                            y: 0,
+                            width: pageWidth,
+                            height: pageHeight
+                        });
+                    }
+
+                    const pdfBytes = await pdfDoc.save();
+                    this.downloadPDF(pdfBytes, 'powerpoint-presentation.pdf');
+
+                    this.loading.style.display = 'none';
+                    this.imageGrid.style.display = 'grid';
+                    document.getElementById('convertBtn').disabled = false;
+                    
+                    this.showToast(`Successfully created PDF with ${this.images.length} slides`, 'success');
+                } catch (error) {
+                    console.error('Conversion error:', error);
+                    this.showToast('Failed to create PDF', 'error');
+                    this.loading.style.display = 'none';
+                    this.imageGrid.style.display = 'grid';
+                    document.getElementById('convertBtn').disabled = false;
+                }
+            }
+
+            async getImageBytes(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(new Uint8Array(reader.result));
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            downloadPDF(pdfBytes, filename) {
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            updateStats() {
+                const totalSize = this.images.reduce((sum, img) => sum + img.size, 0);
+                document.getElementById('imageCount').textContent = this.images.length;
+                document.getElementById('totalSize').textContent = this.formatFileSize(totalSize);
+                document.getElementById('convertBtn').disabled = this.images.length === 0;
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
+        }
+
+        // Global instance for button onclick handlers
+        let powerPointToPdfConverter;
+
+        // Initialize the converter
+        document.addEventListener('DOMContentLoaded', () => {
+            powerPointToPdfConverter = new PowerPointToPDFConverter();
+        });
+    </script>
+</body>
+</html>

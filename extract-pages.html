@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Page Extractor - PDF Pro Suite</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #00ff88;
+        }
+        
+        .back-btn {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+        
+        .main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 50px);
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: #141414;
+            border-right: 1px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .upload-section {
+            margin-bottom: 30px;
+        }
+        
+        .upload-box {
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #1a1a1a;
+            transition: all 0.3s;
+        }
+        
+        .upload-box:hover {
+            border-color: #00ff88;
+            background: #1e1e1e;
+        }
+        
+        .upload-box.dragover {
+            border-color: #00ff88;
+            background: #002a1a;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.7;
+        }
+        
+        .viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+        }
+        
+        .controls {
+            background: #1a1a1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pdf-info {
+            color: #ccc;
+            font-size: 14px;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: auto;
+            background: #222;
+        }
+        
+        .pdf-canvas {
+            border: 2px solid #00ff88;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .page-selection {
+            margin-top: 20px;
+        }
+        
+        .page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        
+        .page-item {
+            aspect-ratio: 3/4;
+            border: 2px solid #333;
+            border-radius: 4px;
+            background: #222;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .page-item:hover {
+            border-color: #00ff88;
+            background: #2a2a2a;
+        }
+        
+        .page-item.selected {
+            border-color: #00ff88;
+            background: #003322;
+            color: #00ff88;
+        }
+        
+        .page-item.range-start {
+            border-color: #ff6b35;
+            background: #2a1a0f;
+            color: #ff6b35;
+        }
+        
+        .page-item.range-end {
+            border-color: #ff6b35;
+            background: #2a1a0f;
+            color: #ff6b35;
+        }
+        
+        .selection-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #333;
+            border-color: #555;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary { 
+            background: #00ff88; 
+            color: #000; 
+            border-color: #00ff88;
+        }
+        
+        .btn-primary:hover { 
+            background: #00cc70;
+            border-color: #00cc70;
+        }
+        
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+            border-color: #ff4757;
+        }
+        
+        .btn-danger:hover {
+            background: #ff3742;
+            border-color: #ff3742;
+        }
+        
+        .range-input {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .range-input input {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 6px;
+            border-radius: 3px;
+            width: 60px;
+            text-align: center;
+        }
+        
+        .extraction-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: #ccc;
+        }
+        
+        .placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .placeholder h3 {
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #00ff88;
+            color: #000;
+        }
+        
+        .toast.error {
+            background: #ff4757;
+        }
+        
+        .toast.info {
+            background: #3742fa;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #00ff88;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            background: #222;
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📄 PDF Page Extractor</h1>
+        <a href="index.html" class="back-btn">← Back to Tools</a>
+    </header>
+
+    <main class="main">
+        <div class="sidebar">
+            <div class="upload-section">
+                <div class="section-title">Upload PDF</div>
+                <div class="upload-box" id="uploadBox">
+                    <span class="upload-icon">📄</span>
+                    <div>Drop PDF here or click to browse</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">Maximum file size: 100MB</div>
+                </div>
+                <input type="file" id="pdfInput" accept=".pdf" style="display: none">
+            </div>
+
+            <div class="page-selection" id="pageSelection" style="display: none;">
+                <div class="section-title">Select Pages to Extract</div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalPages">0</div>
+                        <div class="stat-label">Total Pages</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="selectedCount">0</div>
+                        <div class="stat-label">Selected</div>
+                    </div>
+                </div>
+
+                <div class="selection-controls">
+                    <button class="btn" id="selectAll">Select All</button>
+                    <button class="btn" id="deselectAll">Deselect All</button>
+                    <button class="btn" id="rangeSelect">Range Select</button>
+                </div>
+
+                <div class="range-input" id="rangeInput">
+                    <div style="margin-bottom: 8px; font-size: 12px; color: #ccc;">Page Range:</div>
+                    <input type="number" id="rangeStart" placeholder="From" min="1">
+                    <span style="margin: 0 5px;">to</span>
+                    <input type="number" id="rangeEnd" placeholder="To" min="1">
+                    <button class="btn btn-primary" id="applyRange">Apply</button>
+                </div>
+
+                <div class="page-grid" id="pageGrid"></div>
+
+                <div class="extraction-summary" id="extractionSummary" style="display: none;">
+                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #00ff88;">Ready to Extract</div>
+                    <div id="summaryText"></div>
+                    <button class="btn btn-primary" id="extractBtn" style="width: 100%; margin-top: 15px;">Extract Selected Pages</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="viewer">
+            <div class="controls" id="controls" style="display: none;">
+                <div class="pdf-info" id="pdfInfo">PDF loaded successfully</div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="placeholder" id="placeholder">
+                    <h3>📄 PDF Page Extractor</h3>
+                    <p>Upload a PDF file to extract specific pages</p>
+                </div>
+                <div class="loading" id="loading">
+                    <div>Loading PDF...</div>
+                </div>
+                <canvas id="pdfCanvas" class="pdf-canvas" style="display: none;"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        class PDFExtractor {
+            constructor() {
+                this.pdfDoc = null;
+                this.pdfLibDoc = null;
+                this.totalPages = 0;
+                this.selectedPages = new Set();
+                this.rangeMode = false;
+                this.rangeStart = null;
+                this.rangeEnd = null;
+
+                this.uploadBox = document.getElementById('uploadBox');
+                this.pdfInput = document.getElementById('pdfInput');
+                this.pageSelection = document.getElementById('pageSelection');
+                this.controls = document.getElementById('controls');
+                this.placeholder = document.getElementById('placeholder');
+                this.loading = document.getElementById('loading');
+                this.canvas = document.getElementById('pdfCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                this.setupEvents();
+            }
+
+            setupEvents() {
+                this.uploadBox.addEventListener('click', () => this.pdfInput.click());
+                this.pdfInput.addEventListener('change', (e) => this.loadPDF(e.target.files[0]));
+
+                this.setupDragDrop();
+
+                document.getElementById('selectAll').addEventListener('click', () => this.selectAllPages());
+                document.getElementById('deselectAll').addEventListener('click', () => this.deselectAllPages());
+                document.getElementById('rangeSelect').addEventListener('click', () => this.toggleRangeMode());
+                document.getElementById('applyRange').addEventListener('click', () => this.applyRange());
+                document.getElementById('extractBtn').addEventListener('click', () => this.extractPages());
+            }
+
+            setupDragDrop() {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    document.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+
+                this.uploadBox.addEventListener('dragover', () => {
+                    this.uploadBox.classList.add('dragover');
+                });
+
+                this.uploadBox.addEventListener('dragleave', () => {
+                    this.uploadBox.classList.remove('dragover');
+                });
+
+                this.uploadBox.addEventListener('drop', (e) => {
+                    this.uploadBox.classList.remove('dragover');
+                    const files = Array.from(e.dataTransfer.files);
+                    const pdfFile = files.find(f => f.type === 'application/pdf');
+                    if (pdfFile) this.loadPDF(pdfFile);
+                });
+            }
+
+            async loadPDF(file) {
+                if (!file || file.type !== 'application/pdf') {
+                    this.showToast('Please select a valid PDF file', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Loading PDF...', 'info');
+                    this.placeholder.style.display = 'none';
+                    this.loading.style.display = 'block';
+
+                    const arrayBuffer = await file.arrayBuffer();
+                    this.pdfLibDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                    
+                    const typedArray = new Uint8Array(arrayBuffer);
+                    this.pdfDoc = await pdfjsLib.getDocument({
+                        data: typedArray,
+                        cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+                        cMapPacked: true
+                    }).promise;
+                    
+                    this.totalPages = this.pdfDoc.numPages;
+                    document.getElementById('totalPages').textContent = this.totalPages;
+
+                    await this.renderPreview();
+                    this.createPageGrid();
+                    this.updateUI();
+
+                    this.loading.style.display = 'none';
+                    this.canvas.style.display = 'block';
+                    this.controls.style.display = 'flex';
+                    this.pageSelection.style.display = 'block';
+
+                    this.showToast(`PDF loaded: ${this.totalPages} pages`, 'success');
+                } catch (error) {
+                    console.error('PDF loading error:', error);
+                    this.showToast('Failed to load PDF', 'error');
+                    this.loading.style.display = 'none';
+                    this.placeholder.style.display = 'block';
+                }
+            }
+
+            async renderPreview() {
+                if (!this.pdfDoc) return;
+
+                try {
+                    const page = await this.pdfDoc.getPage(1);
+                    const viewport = page.getViewport({ scale: 1.5 });
+
+                    this.canvas.width = viewport.width;
+                    this.canvas.height = viewport.height;
+                    this.canvas.style.width = viewport.width + 'px';
+                    this.canvas.style.height = viewport.height + 'px';
+
+                    const renderContext = {
+                        canvasContext: this.ctx,
+                        viewport: viewport
+                    };
+
+                    await page.render(renderContext).promise;
+                } catch (error) {
+                    console.error('Preview render error:', error);
+                }
+            }
+
+            createPageGrid() {
+                const pageGrid = document.getElementById('pageGrid');
+                pageGrid.innerHTML = '';
+
+                for (let i = 1; i <= this.totalPages; i++) {
+                    const pageItem = document.createElement('div');
+                    pageItem.className = 'page-item';
+                    pageItem.textContent = i;
+                    pageItem.dataset.page = i;
+
+                    pageItem.addEventListener('click', () => this.togglePageSelection(i));
+
+                    pageGrid.appendChild(pageItem);
+                }
+            }
+
+            togglePageSelection(pageNum) {
+                if (this.selectedPages.has(pageNum)) {
+                    this.selectedPages.delete(pageNum);
+                } else {
+                    this.selectedPages.add(pageNum);
+                }
+                this.updatePageGrid();
+                this.updateSelectionSummary();
+            }
+
+            selectAllPages() {
+                this.selectedPages.clear();
+                for (let i = 1; i <= this.totalPages; i++) {
+                    this.selectedPages.add(i);
+                }
+                this.updatePageGrid();
+                this.updateSelectionSummary();
+            }
+
+            deselectAllPages() {
+                this.selectedPages.clear();
+                this.updatePageGrid();
+                this.updateSelectionSummary();
+            }
+
+            toggleRangeMode() {
+                this.rangeMode = !this.rangeMode;
+                const rangeInput = document.getElementById('rangeInput');
+                rangeInput.style.display = this.rangeMode ? 'block' : 'none';
+                
+                if (this.rangeMode) {
+                    document.getElementById('rangeStart').max = this.totalPages;
+                    document.getElementById('rangeEnd').max = this.totalPages;
+                }
+            }
+
+            applyRange() {
+                const start = parseInt(document.getElementById('rangeStart').value);
+                const end = parseInt(document.getElementById('rangeEnd').value);
+
+                if (!start || !end || start > end || start < 1 || end > this.totalPages) {
+                    this.showToast('Invalid page range', 'error');
+                    return;
+                }
+
+                this.selectedPages.clear();
+                for (let i = start; i <= end; i++) {
+                    this.selectedPages.add(i);
+                }
+
+                this.updatePageGrid();
+                this.updateSelectionSummary();
+                this.toggleRangeMode();
+                this.showToast(`Selected pages ${start}-${end}`, 'success');
+            }
+
+            updatePageGrid() {
+                const pageItems = document.querySelectorAll('.page-item');
+                pageItems.forEach(item => {
+                    const pageNum = parseInt(item.dataset.page);
+                    item.classList.toggle('selected', this.selectedPages.has(pageNum));
+                });
+
+                document.getElementById('selectedCount').textContent = this.selectedPages.size;
+            }
+
+            updateSelectionSummary() {
+                const summary = document.getElementById('extractionSummary');
+                const summaryText = document.getElementById('summaryText');
+
+                if (this.selectedPages.size > 0) {
+                    const pages = Array.from(this.selectedPages).sort((a, b) => a - b);
+                    const pageList = this.formatPageList(pages);
+                    summaryText.textContent = `Extract ${this.selectedPages.size} page(s): ${pageList}`;
+                    summary.style.display = 'block';
+                } else {
+                    summary.style.display = 'none';
+                }
+            }
+
+            formatPageList(pages) {
+                if (pages.length <= 5) {
+                    return pages.join(', ');
+                } else {
+                    return `${pages.slice(0, 3).join(', ')}, ... +${pages.length - 3} more`;
+                }
+            }
+
+            async extractPages() {
+                if (this.selectedPages.size === 0) {
+                    this.showToast('Please select pages to extract', 'error');
+                    return;
+                }
+
+                try {
+                    this.showToast('Extracting pages...', 'info');
+                    
+                    const newPdf = await PDFLib.PDFDocument.create();
+                    const pages = Array.from(this.selectedPages).sort((a, b) => a - b);
+
+                    for (const pageNum of pages) {
+                        const [copiedPage] = await newPdf.copyPages(this.pdfLibDoc, [pageNum - 1]);
+                        newPdf.addPage(copiedPage);
+                    }
+
+                    const pdfBytes = await newPdf.save();
+                    this.downloadPDF(pdfBytes, `extracted-pages-${pages.join('-')}.pdf`);
+                    
+                    this.showToast(`Successfully extracted ${pages.length} pages`, 'success');
+                } catch (error) {
+                    console.error('Extraction error:', error);
+                    this.showToast('Failed to extract pages', 'error');
+                }
+            }
+
+            downloadPDF(pdfBytes, filename) {
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            updateUI() {
+                document.getElementById('pdfInfo').textContent = `PDF loaded: ${this.totalPages} pages`;
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the PDF Extractor
+        document.addEventListener('DOMContentLoaded', () => {
+            new PDFExtractor();
+        });
+    </script>
+</body>
+</html>
