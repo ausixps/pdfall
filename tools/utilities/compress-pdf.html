@@ -684,34 +684,110 @@
                 try {
                     this.showToast('Compressing PDF...', 'info');
                     
-                    // Create a new PDF document for compression
-                    const compressedPdf = await PDFLib.PDFDocument.create();
                     const settings = this.qualitySettings[this.selectedQuality];
                     
-                    // Copy all pages to the new document
-                    const pageCount = this.pdfLibDoc.getPageCount();
-                    const pages = await compressedPdf.copyPages(this.pdfLibDoc, 
-                        Array.from({ length: pageCount }, (_, i) => i));
+                    // Method 1: Re-render PDF pages at lower quality
+                    const compressedPdf = await this.compressPDFByRendering(settings);
                     
-                    pages.forEach(page => compressedPdf.addPage(page));
-
-                    // Apply compression settings (simplified approach)
-                    const pdfBytes = await compressedPdf.save({
-                        useObjectStreams: true,
-                        addDefaultPage: false,
-                        objectsPerTick: 50
-                    });
-
-                    // Calculate actual compression ratio
-                    const actualSavings = ((this.originalSize - pdfBytes.length) / this.originalSize * 100).toFixed(1);
+                    if (!compressedPdf || compressedPdf.length >= this.originalSize) {
+                        // Fallback: Basic PDF optimization
+                        const optimizedBytes = await this.basicPDFOptimization();
+                        this.downloadPDF(optimizedBytes, 'compressed-document.pdf');
+                        const actualSavings = ((this.originalSize - optimizedBytes.length) / this.originalSize * 100).toFixed(1);
+                        this.showToast(`PDF optimized! Saved ${actualSavings}% (${this.formatFileSize(this.originalSize - optimizedBytes.length)})`, 'success');
+                        return;
+                    }
                     
-                    this.downloadPDF(pdfBytes, 'compressed-document.pdf');
+                    const actualSavings = ((this.originalSize - compressedPdf.length) / this.originalSize * 100).toFixed(1);
+                    this.downloadPDF(compressedPdf, 'compressed-document.pdf');
+                    this.showToast(`PDF compressed! Saved ${actualSavings}% (${this.formatFileSize(this.originalSize - compressedPdf.length)})`, 'success');
                     
-                    this.showToast(`PDF compressed! Saved ${actualSavings}% (${this.formatFileSize(this.originalSize - pdfBytes.length)})`, 'success');
                 } catch (error) {
                     console.error('Compression error:', error);
                     this.showToast('Failed to compress PDF', 'error');
                 }
+            }
+            
+            async compressPDFByRendering(settings) {
+                try {
+                    // Create new PDF document
+                    const newPdf = await PDFLib.PDFDocument.create();
+                    
+                    // Render each page at reduced quality and re-add to PDF
+                    for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
+                        const page = await this.pdfjsDoc.getPage(pageNum);
+                        
+                        // Calculate scale based on quality setting
+                        const scale = settings.quality;
+                        const viewport = page.getViewport({ scale });
+                        
+                        // Create canvas for rendering
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        
+                        // Render page to canvas
+                        await page.render({ canvasContext: context, viewport }).promise;
+                        
+                        // Convert canvas to JPEG with compression
+                        const imageDataUrl = canvas.toDataURL('image/jpeg', settings.quality);
+                        const imageBytes = this.dataUrlToBytes(imageDataUrl);
+                        
+                        // Embed compressed image in new PDF
+                        const image = await newPdf.embedJpg(imageBytes);
+                        const newPage = newPdf.addPage([viewport.width, viewport.height]);
+                        newPage.drawImage(image, {
+                            x: 0,
+                            y: 0,
+                            width: viewport.width,
+                            height: viewport.height,
+                        });
+                    }
+                    
+                    // Save compressed PDF with optimization
+                    const pdfBytes = await newPdf.save({
+                        useObjectStreams: true,
+                        addDefaultPage: false,
+                        objectsPerTick: 50,
+                        updateFieldAppearances: false
+                    });
+                    
+                    return pdfBytes;
+                } catch (error) {
+                    console.error('Rendering compression failed:', error);
+                    return null;
+                }
+            }
+            
+            async basicPDFOptimization() {
+                // Fallback method: Basic PDF structure optimization
+                const newPdf = await PDFLib.PDFDocument.create();
+                const pageCount = this.pdfLibDoc.getPageCount();
+                const pages = await newPdf.copyPages(this.pdfLibDoc, 
+                    Array.from({ length: pageCount }, (_, i) => i));
+                
+                pages.forEach(page => newPdf.addPage(page));
+                
+                // Save with aggressive optimization settings
+                const pdfBytes = await newPdf.save({
+                    useObjectStreams: true,
+                    addDefaultPage: false,
+                    objectsPerTick: 20,
+                    updateFieldAppearances: false
+                });
+                
+                return pdfBytes;
+            }
+            
+            dataUrlToBytes(dataUrl) {
+                const base64 = dataUrl.split(',')[1];
+                const binaryString = atob(base64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes;
             }
 
             downloadPDF(pdfBytes, filename) {
