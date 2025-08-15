@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Splitter - PDF Pro Suite</title>
+    <title>PDF Page Extractor - PDF Pro Suite</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <style>
@@ -61,7 +61,7 @@
         }
         
         .sidebar {
-            width: 380px;
+            width: 320px;
             background: #141414;
             border-right: 1px solid #333;
             padding: 20px;
@@ -116,6 +116,11 @@
             justify-content: center;
         }
         
+        .pdf-info {
+            color: #ccc;
+            font-size: 14px;
+        }
+        
         .canvas-container {
             flex: 1;
             display: flex;
@@ -134,89 +139,16 @@
             max-height: 100%;
         }
         
-        .split-options {
+        .page-selection {
             margin-top: 20px;
-        }
-        
-        .split-mode {
-            margin-bottom: 20px;
-        }
-        
-        .mode-option {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .mode-option:hover {
-            border-color: #00ff88;
-            background: #252525;
-        }
-        
-        .mode-option.selected {
-            border-color: #00ff88;
-            background: #003322;
-        }
-        
-        .mode-title {
-            font-weight: 500;
-            margin-bottom: 5px;
-            color: #ffffff;
-        }
-        
-        .mode-desc {
-            font-size: 12px;
-            color: #999;
-        }
-        
-        .split-config {
-            margin-top: 15px;
-            padding: 15px;
-            background: #222;
-            border-radius: 6px;
-            display: none;
-        }
-        
-        .split-config.active {
-            display: block;
-        }
-        
-        .input-group {
-            margin-bottom: 15px;
-        }
-        
-        .input-label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 12px;
-            color: #ccc;
-        }
-        
-        .input-field {
-            width: 100%;
-            background: #333;
-            border: 1px solid #555;
-            color: white;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .input-field:focus {
-            outline: none;
-            border-color: #00ff88;
         }
         
         .page-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-            gap: 6px;
-            margin-top: 10px;
-            max-height: 200px;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+            margin-top: 15px;
+            max-height: 300px;
             overflow-y: auto;
             padding: 10px;
             background: #1a1a1a;
@@ -232,9 +164,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 500;
             transition: all 0.3s;
+            position: relative;
         }
         
         .page-item:hover {
@@ -242,10 +175,29 @@
             background: #2a2a2a;
         }
         
-        .page-item.split-point {
+        .page-item.selected {
+            border-color: #00ff88;
+            background: #003322;
+            color: #00ff88;
+        }
+        
+        .page-item.range-start {
             border-color: #ff6b35;
             background: #2a1a0f;
             color: #ff6b35;
+        }
+        
+        .page-item.range-end {
+            border-color: #ff6b35;
+            background: #2a1a0f;
+            color: #ff6b35;
+        }
+        
+        .selection-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         
         .btn {
@@ -281,12 +233,33 @@
             border-color: #00cc70;
         }
         
-        .btn-small {
-            padding: 6px 10px;
-            font-size: 11px;
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+            border-color: #ff4757;
         }
         
-        .split-summary {
+        .btn-danger:hover {
+            background: #ff3742;
+            border-color: #ff3742;
+        }
+        
+        .range-input {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .range-input input {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 6px;
+            border-radius: 3px;
+            width: 60px;
+            text-align: center;
+        }
+        
+        .extraction-summary {
             margin-top: 20px;
             padding: 15px;
             background: #1a1a1a;
@@ -375,36 +348,18 @@
             font-size: 11px;
             color: #999;
         }
-        
-        .range-display {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .range-input {
-            width: 80px;
-        }
-        
-        .preview-info {
-            color: #ccc;
-            font-size: 14px;
-            text-align: center;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>✂️ PDF Splitter</h1>
-        <a href="index.html" class="back-btn">← Back to Tools</a>
+        <h1>📄 PDF Page Extractor</h1>
+        <a href="../../index.html" class="back-btn">← Back to Tools</a>
     </header>
 
     <main class="main">
         <div class="sidebar">
             <div class="upload-section">
-                <div class="section-title">Upload PDF File</div>
+                <div class="section-title">Upload PDF</div>
                 <div class="upload-box" id="uploadBox">
                     <span class="upload-icon">📄</span>
                     <div>Drop PDF here or click to browse</div>
@@ -413,8 +368,8 @@
                 <input type="file" id="pdfInput" accept=".pdf" style="display: none">
             </div>
 
-            <div class="split-options" id="splitOptions" style="display: none;">
-                <div class="section-title">PDF Information</div>
+            <div class="page-selection" id="pageSelection" style="display: none;">
+                <div class="section-title">Select Pages to Extract</div>
                 
                 <div class="stats">
                     <div class="stat-item">
@@ -422,74 +377,47 @@
                         <div class="stat-label">Total Pages</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number" id="fileSize">0</div>
-                        <div class="stat-label">File Size</div>
+                        <div class="stat-number" id="selectedCount">0</div>
+                        <div class="stat-label">Selected</div>
                     </div>
                 </div>
 
-                <div class="section-title">Split Mode</div>
-                
-                <div class="split-mode">
-                    <div class="mode-option" data-mode="pages">
-                        <div class="mode-title">📄 Split by Pages</div>
-                        <div class="mode-desc">Extract specific page ranges</div>
-                    </div>
-                    
-                    <div class="mode-option" data-mode="interval">
-                        <div class="mode-title">📊 Split by Interval</div>
-                        <div class="mode-desc">Split every N pages</div>
-                    </div>
-                    
-                    <div class="mode-option" data-mode="equal">
-                        <div class="mode-title">⚖️ Split Equally</div>
-                        <div class="mode-desc">Split into equal parts</div>
-                    </div>
+                <div class="selection-controls">
+                    <button class="btn" id="selectAll">Select All</button>
+                    <button class="btn" id="deselectAll">Deselect All</button>
+                    <button class="btn" id="rangeSelect">Range Select</button>
                 </div>
 
-                <div class="split-config" id="configPages">
-                    <div class="input-group">
-                        <label class="input-label">Page Ranges (e.g., 1-5, 8-10, 15)</label>
-                        <input type="text" class="input-field" id="pageRanges" placeholder="1-5, 8-10, 15">
-                    </div>
-                    <div style="font-size: 11px; color: #999; margin-bottom: 10px;">
-                        Separate ranges with commas. Use hyphen for ranges (1-5) or single numbers (8)
-                    </div>
+                <div class="range-input" id="rangeInput">
+                    <div style="margin-bottom: 8px; font-size: 12px; color: #ccc;">Page Range:</div>
+                    <input type="number" id="rangeStart" placeholder="From" min="1">
+                    <span style="margin: 0 5px;">to</span>
+                    <input type="number" id="rangeEnd" placeholder="To" min="1">
+                    <button class="btn btn-primary" id="applyRange">Apply</button>
                 </div>
 
-                <div class="split-config" id="configInterval">
-                    <div class="input-group">
-                        <label class="input-label">Split every N pages</label>
-                        <input type="number" class="input-field" id="intervalPages" placeholder="5" min="1">
-                    </div>
-                </div>
+                <div class="page-grid" id="pageGrid"></div>
 
-                <div class="split-config" id="configEqual">
-                    <div class="input-group">
-                        <label class="input-label">Number of parts</label>
-                        <input type="number" class="input-field" id="equalParts" placeholder="3" min="2">
-                    </div>
-                </div>
-
-                <div class="split-summary" id="splitSummary" style="display: none;">
-                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #00ff88;">Split Preview</div>
+                <div class="extraction-summary" id="extractionSummary" style="display: none;">
+                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #00ff88;">Ready to Extract</div>
                     <div id="summaryText"></div>
-                    <button class="btn btn-primary" id="splitBtn" style="width: 100%; margin-top: 15px;">Split PDF</button>
+                    <button class="btn btn-primary" id="extractBtn" style="width: 100%; margin-top: 15px;">Extract Selected Pages</button>
                 </div>
             </div>
         </div>
 
         <div class="viewer">
             <div class="controls" id="controls" style="display: none;">
-                <div class="preview-info" id="previewInfo">PDF loaded successfully</div>
+                <div class="pdf-info" id="pdfInfo">PDF loaded successfully</div>
             </div>
 
             <div class="canvas-container">
                 <div class="placeholder" id="placeholder">
-                    <h3>✂️ PDF Splitter</h3>
-                    <p>Upload a PDF file to split it into multiple documents</p>
+                    <h3>📄 PDF Page Extractor</h3>
+                    <p>Upload a PDF file to extract specific pages</p>
                 </div>
                 <div class="loading" id="loading">
-                    <div>Processing PDF...</div>
+                    <div>Loading PDF...</div>
                 </div>
                 <canvas id="pdfCanvas" class="pdf-canvas" style="display: none;"></canvas>
             </div>
@@ -497,17 +425,19 @@
     </main>
 
     <script>
-        class PDFSplitter {
+        class PDFExtractor {
             constructor() {
                 this.pdfDoc = null;
                 this.pdfLibDoc = null;
                 this.totalPages = 0;
-                this.currentMode = null;
-                this.splitConfig = {};
+                this.selectedPages = new Set();
+                this.rangeMode = false;
+                this.rangeStart = null;
+                this.rangeEnd = null;
 
                 this.uploadBox = document.getElementById('uploadBox');
                 this.pdfInput = document.getElementById('pdfInput');
-                this.splitOptions = document.getElementById('splitOptions');
+                this.pageSelection = document.getElementById('pageSelection');
                 this.controls = document.getElementById('controls');
                 this.placeholder = document.getElementById('placeholder');
                 this.loading = document.getElementById('loading');
@@ -523,17 +453,11 @@
 
                 this.setupDragDrop();
 
-                // Mode selection
-                document.querySelectorAll('.mode-option').forEach(option => {
-                    option.addEventListener('click', () => this.selectMode(option.dataset.mode));
-                });
-
-                // Input events
-                document.getElementById('pageRanges').addEventListener('input', () => this.updateSplitSummary());
-                document.getElementById('intervalPages').addEventListener('input', () => this.updateSplitSummary());
-                document.getElementById('equalParts').addEventListener('input', () => this.updateSplitSummary());
-
-                document.getElementById('splitBtn').addEventListener('click', () => this.splitPDF());
+                document.getElementById('selectAll').addEventListener('click', () => this.selectAllPages());
+                document.getElementById('deselectAll').addEventListener('click', () => this.deselectAllPages());
+                document.getElementById('rangeSelect').addEventListener('click', () => this.toggleRangeMode());
+                document.getElementById('applyRange').addEventListener('click', () => this.applyRange());
+                document.getElementById('extractBtn').addEventListener('click', () => this.extractPages());
             }
 
             setupDragDrop() {
@@ -582,15 +506,16 @@
                     }).promise;
                     
                     this.totalPages = this.pdfDoc.numPages;
-                    this.fileSize = file.size;
+                    document.getElementById('totalPages').textContent = this.totalPages;
 
                     await this.renderPreview();
+                    this.createPageGrid();
                     this.updateUI();
 
                     this.loading.style.display = 'none';
                     this.canvas.style.display = 'block';
                     this.controls.style.display = 'flex';
-                    this.splitOptions.style.display = 'block';
+                    this.pageSelection.style.display = 'block';
 
                     this.showToast(`PDF loaded: ${this.totalPages} pages`, 'success');
                 } catch (error) {
@@ -624,154 +549,134 @@
                 }
             }
 
-            selectMode(mode) {
-                this.currentMode = mode;
+            createPageGrid() {
+                const pageGrid = document.getElementById('pageGrid');
+                pageGrid.innerHTML = '';
+
+                for (let i = 1; i <= this.totalPages; i++) {
+                    const pageItem = document.createElement('div');
+                    pageItem.className = 'page-item';
+                    pageItem.textContent = i;
+                    pageItem.dataset.page = i;
+
+                    pageItem.addEventListener('click', () => this.togglePageSelection(i));
+
+                    pageGrid.appendChild(pageItem);
+                }
+            }
+
+            togglePageSelection(pageNum) {
+                if (this.selectedPages.has(pageNum)) {
+                    this.selectedPages.delete(pageNum);
+                } else {
+                    this.selectedPages.add(pageNum);
+                }
+                this.updatePageGrid();
+                this.updateSelectionSummary();
+            }
+
+            selectAllPages() {
+                this.selectedPages.clear();
+                for (let i = 1; i <= this.totalPages; i++) {
+                    this.selectedPages.add(i);
+                }
+                this.updatePageGrid();
+                this.updateSelectionSummary();
+            }
+
+            deselectAllPages() {
+                this.selectedPages.clear();
+                this.updatePageGrid();
+                this.updateSelectionSummary();
+            }
+
+            toggleRangeMode() {
+                this.rangeMode = !this.rangeMode;
+                const rangeInput = document.getElementById('rangeInput');
+                rangeInput.style.display = this.rangeMode ? 'block' : 'none';
                 
-                // Update UI
-                document.querySelectorAll('.mode-option').forEach(option => {
-                    option.classList.toggle('selected', option.dataset.mode === mode);
-                });
-
-                document.querySelectorAll('.split-config').forEach(config => {
-                    config.classList.remove('active');
-                });
-
-                document.getElementById(`config${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
-
-                this.updateSplitSummary();
+                if (this.rangeMode) {
+                    document.getElementById('rangeStart').max = this.totalPages;
+                    document.getElementById('rangeEnd').max = this.totalPages;
+                }
             }
 
-            updateSplitSummary() {
-                if (!this.currentMode) return;
+            applyRange() {
+                const start = parseInt(document.getElementById('rangeStart').value);
+                const end = parseInt(document.getElementById('rangeEnd').value);
 
-                const summary = document.getElementById('splitSummary');
+                if (!start || !end || start > end || start < 1 || end > this.totalPages) {
+                    this.showToast('Invalid page range', 'error');
+                    return;
+                }
+
+                this.selectedPages.clear();
+                for (let i = start; i <= end; i++) {
+                    this.selectedPages.add(i);
+                }
+
+                this.updatePageGrid();
+                this.updateSelectionSummary();
+                this.toggleRangeMode();
+                this.showToast(`Selected pages ${start}-${end}`, 'success');
+            }
+
+            updatePageGrid() {
+                const pageItems = document.querySelectorAll('.page-item');
+                pageItems.forEach(item => {
+                    const pageNum = parseInt(item.dataset.page);
+                    item.classList.toggle('selected', this.selectedPages.has(pageNum));
+                });
+
+                document.getElementById('selectedCount').textContent = this.selectedPages.size;
+            }
+
+            updateSelectionSummary() {
+                const summary = document.getElementById('extractionSummary');
                 const summaryText = document.getElementById('summaryText');
-                let config = null;
 
-                try {
-                    switch (this.currentMode) {
-                        case 'pages':
-                            config = this.parsePageRanges();
-                            break;
-                        case 'interval':
-                            config = this.parseInterval();
-                            break;
-                        case 'equal':
-                            config = this.parseEqual();
-                            break;
-                    }
-
-                    if (config && config.splits.length > 0) {
-                        summaryText.innerHTML = config.description;
-                        summary.style.display = 'block';
-                        this.splitConfig = config;
-                    } else {
-                        summary.style.display = 'none';
-                    }
-                } catch (error) {
-                    summaryText.textContent = error.message;
+                if (this.selectedPages.size > 0) {
+                    const pages = Array.from(this.selectedPages).sort((a, b) => a - b);
+                    const pageList = this.formatPageList(pages);
+                    summaryText.textContent = `Extract ${this.selectedPages.size} page(s): ${pageList}`;
                     summary.style.display = 'block';
+                } else {
+                    summary.style.display = 'none';
                 }
             }
 
-            parsePageRanges() {
-                const input = document.getElementById('pageRanges').value.trim();
-                if (!input) throw new Error('Please enter page ranges');
-
-                const ranges = input.split(',').map(r => r.trim()).filter(r => r);
-                const splits = [];
-
-                for (const range of ranges) {
-                    if (range.includes('-')) {
-                        const [start, end] = range.split('-').map(n => parseInt(n.trim()));
-                        if (isNaN(start) || isNaN(end) || start > end || start < 1 || end > this.totalPages) {
-                            throw new Error(`Invalid range: ${range}`);
-                        }
-                        splits.push({ start, end, name: `pages-${start}-${end}` });
-                    } else {
-                        const page = parseInt(range);
-                        if (isNaN(page) || page < 1 || page > this.totalPages) {
-                            throw new Error(`Invalid page: ${range}`);
-                        }
-                        splits.push({ start: page, end: page, name: `page-${page}` });
-                    }
+            formatPageList(pages) {
+                if (pages.length <= 5) {
+                    return pages.join(', ');
+                } else {
+                    return `${pages.slice(0, 3).join(', ')}, ... +${pages.length - 3} more`;
                 }
-
-                return {
-                    splits,
-                    description: `Will create ${splits.length} file(s): ${splits.map(s => 
-                        s.start === s.end ? `Page ${s.start}` : `Pages ${s.start}-${s.end}`
-                    ).join(', ')}`
-                };
             }
 
-            parseInterval() {
-                const interval = parseInt(document.getElementById('intervalPages').value);
-                if (isNaN(interval) || interval < 1) {
-                    throw new Error('Please enter a valid interval');
-                }
-
-                const splits = [];
-                for (let i = 1; i <= this.totalPages; i += interval) {
-                    const start = i;
-                    const end = Math.min(i + interval - 1, this.totalPages);
-                    splits.push({ start, end, name: `part-${Math.ceil(i / interval)}` });
-                }
-
-                return {
-                    splits,
-                    description: `Will create ${splits.length} file(s), each with ${interval} page(s) (last may have fewer)`
-                };
-            }
-
-            parseEqual() {
-                const parts = parseInt(document.getElementById('equalParts').value);
-                if (isNaN(parts) || parts < 2 || parts > this.totalPages) {
-                    throw new Error('Please enter a valid number of parts');
-                }
-
-                const pagesPerPart = Math.ceil(this.totalPages / parts);
-                const splits = [];
-
-                for (let i = 0; i < parts; i++) {
-                    const start = i * pagesPerPart + 1;
-                    const end = Math.min((i + 1) * pagesPerPart, this.totalPages);
-                    if (start <= this.totalPages) {
-                        splits.push({ start, end, name: `part-${i + 1}` });
-                    }
-                }
-
-                return {
-                    splits,
-                    description: `Will create ${splits.length} file(s), approximately ${pagesPerPart} pages each`
-                };
-            }
-
-            async splitPDF() {
-                if (!this.splitConfig || this.splitConfig.splits.length === 0) {
-                    this.showToast('Please configure split settings', 'error');
+            async extractPages() {
+                if (this.selectedPages.size === 0) {
+                    this.showToast('Please select pages to extract', 'error');
                     return;
                 }
 
                 try {
-                    this.showToast('Splitting PDF...', 'info');
+                    this.showToast('Extracting pages...', 'info');
                     
-                    for (const split of this.splitConfig.splits) {
-                        const newPdf = await PDFLib.PDFDocument.create();
-                        
-                        for (let pageNum = split.start; pageNum <= split.end; pageNum++) {
-                            const [copiedPage] = await newPdf.copyPages(this.pdfLibDoc, [pageNum - 1]);
-                            newPdf.addPage(copiedPage);
-                        }
+                    const newPdf = await PDFLib.PDFDocument.create();
+                    const pages = Array.from(this.selectedPages).sort((a, b) => a - b);
 
-                        const pdfBytes = await newPdf.save();
-                        this.downloadPDF(pdfBytes, `${split.name}.pdf`);
+                    for (const pageNum of pages) {
+                        const [copiedPage] = await newPdf.copyPages(this.pdfLibDoc, [pageNum - 1]);
+                        newPdf.addPage(copiedPage);
                     }
+
+                    const pdfBytes = await newPdf.save();
+                    this.downloadPDF(pdfBytes, `extracted-pages-${pages.join('-')}.pdf`);
                     
-                    this.showToast(`Successfully split into ${this.splitConfig.splits.length} files`, 'success');
+                    this.showToast(`Successfully extracted ${pages.length} pages`, 'success');
                 } catch (error) {
-                    console.error('Split error:', error);
-                    this.showToast('Failed to split PDF', 'error');
+                    console.error('Extraction error:', error);
+                    this.showToast('Failed to extract pages', 'error');
                 }
             }
 
@@ -788,17 +693,7 @@
             }
 
             updateUI() {
-                document.getElementById('totalPages').textContent = this.totalPages;
-                document.getElementById('fileSize').textContent = this.formatFileSize(this.fileSize);
-                document.getElementById('previewInfo').textContent = `PDF loaded: ${this.totalPages} pages`;
-            }
-
-            formatFileSize(bytes) {
-                if (bytes === 0) return '0 B';
-                const k = 1024;
-                const sizes = ['B', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+                document.getElementById('pdfInfo').textContent = `PDF loaded: ${this.totalPages} pages`;
             }
 
             showToast(message, type = 'info') {
@@ -815,9 +710,9 @@
             }
         }
 
-        // Initialize the PDF Splitter
+        // Initialize the PDF Extractor
         document.addEventListener('DOMContentLoaded', () => {
-            new PDFSplitter();
+            new PDFExtractor();
         });
     </script>
 </body>

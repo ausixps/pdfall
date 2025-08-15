@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Compressor - PDF Pro Suite</title>
+    <title>PDF Splitter - PDF Pro Suite</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <style>
@@ -61,7 +61,7 @@
         }
         
         .sidebar {
-            width: 400px;
+            width: 380px;
             background: #141414;
             border-right: 1px solid #333;
             padding: 20px;
@@ -134,15 +134,15 @@
             max-height: 100%;
         }
         
-        .compression-options {
+        .split-options {
             margin-top: 20px;
         }
         
-        .quality-selector {
+        .split-mode {
             margin-bottom: 20px;
         }
         
-        .quality-option {
+        .mode-option {
             background: #1a1a1a;
             border: 1px solid #333;
             border-radius: 6px;
@@ -152,50 +152,100 @@
             transition: all 0.3s;
         }
         
-        .quality-option:hover {
+        .mode-option:hover {
             border-color: #00ff88;
             background: #252525;
         }
         
-        .quality-option.selected {
+        .mode-option.selected {
             border-color: #00ff88;
             background: #003322;
         }
         
-        .quality-title {
+        .mode-title {
             font-weight: 500;
             margin-bottom: 5px;
             color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         
-        .quality-desc {
+        .mode-desc {
             font-size: 12px;
             color: #999;
         }
         
-        .quality-badge {
+        .split-config {
+            margin-top: 15px;
+            padding: 15px;
+            background: #222;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .split-config.active {
+            display: block;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .input-field {
+            width: 100%;
             background: #333;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 12px;
+            border: 1px solid #555;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+        
+        .page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 6px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        
+        .page-item {
+            aspect-ratio: 3/4;
+            border: 2px solid #333;
+            border-radius: 4px;
+            background: #222;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 10px;
             font-weight: 500;
+            transition: all 0.3s;
         }
         
-        .quality-badge.high {
-            background: #ff6b35;
+        .page-item:hover {
+            border-color: #00ff88;
+            background: #2a2a2a;
         }
         
-        .quality-badge.medium {
-            background: #ffa500;
-        }
-        
-        .quality-badge.low {
-            background: #00ff88;
-            color: #000;
+        .page-item.split-point {
+            border-color: #ff6b35;
+            background: #2a1a0f;
+            color: #ff6b35;
         }
         
         .btn {
@@ -231,45 +281,17 @@
             border-color: #00cc70;
         }
         
-        .compression-summary {
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+        
+        .split-summary {
             margin-top: 20px;
             padding: 15px;
             background: #1a1a1a;
             border-radius: 6px;
             border: 1px solid #333;
-        }
-        
-        .size-comparison {
-            display: flex;
-            justify-content: space-between;
-            margin: 15px 0;
-        }
-        
-        .size-item {
-            text-align: center;
-            flex: 1;
-        }
-        
-        .size-label {
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 5px;
-        }
-        
-        .size-value {
-            font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
-        }
-        
-        .size-savings {
-            text-align: center;
-            margin-top: 10px;
-            padding: 8px;
-            background: #003322;
-            border-radius: 4px;
-            color: #00ff88;
-            font-weight: 500;
         }
         
         .loading {
@@ -354,61 +376,29 @@
             color: #999;
         }
         
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: #333;
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 15px 0;
+        .range-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
         }
         
-        .progress-fill {
-            height: 100%;
-            background: #00ff88;
-            width: 0%;
-            transition: width 0.3s ease;
+        .range-input {
+            width: 80px;
         }
         
-        .tips {
-            margin-top: 20px;
-            padding: 15px;
-            background: #1a1a1a;
-            border-radius: 6px;
-            border-left: 3px solid #00ff88;
-        }
-        
-        .tips h4 {
-            margin-bottom: 10px;
-            color: #00ff88;
-            font-size: 13px;
-        }
-        
-        .tips ul {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .tips li {
-            font-size: 12px;
+        .preview-info {
             color: #ccc;
-            margin-bottom: 5px;
-            padding-left: 15px;
-            position: relative;
-        }
-        
-        .tips li::before {
-            content: '•';
-            color: #00ff88;
-            position: absolute;
-            left: 0;
+            font-size: 14px;
+            text-align: center;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>🗜️ PDF Compressor</h1>
-        <a href="index.html" class="back-btn">← Back to Tools</a>
+        <h1>✂️ PDF Splitter</h1>
+        <a href="../../index.html" class="back-btn">← Back to Tools</a>
     </header>
 
     <main class="main">
@@ -423,94 +413,80 @@
                 <input type="file" id="pdfInput" accept=".pdf" style="display: none">
             </div>
 
-            <div class="compression-options" id="compressionOptions" style="display: none;">
-                <div class="section-title">File Information</div>
+            <div class="split-options" id="splitOptions" style="display: none;">
+                <div class="section-title">PDF Information</div>
                 
                 <div class="stats">
                     <div class="stat-item">
                         <div class="stat-number" id="totalPages">0</div>
-                        <div class="stat-label">Pages</div>
+                        <div class="stat-label">Total Pages</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number" id="originalSize">0</div>
-                        <div class="stat-label">Original Size</div>
+                        <div class="stat-number" id="fileSize">0</div>
+                        <div class="stat-label">File Size</div>
                     </div>
                 </div>
 
-                <div class="section-title">Compression Quality</div>
+                <div class="section-title">Split Mode</div>
                 
-                <div class="quality-selector">
-                    <div class="quality-option" data-quality="high">
-                        <div class="quality-title">
-                            High Quality
-                            <span class="quality-badge high">90%</span>
-                        </div>
-                        <div class="quality-desc">Best quality, minimal compression</div>
+                <div class="split-mode">
+                    <div class="mode-option" data-mode="pages">
+                        <div class="mode-title">📄 Split by Pages</div>
+                        <div class="mode-desc">Extract specific page ranges</div>
                     </div>
                     
-                    <div class="quality-option selected" data-quality="medium">
-                        <div class="quality-title">
-                            Balanced
-                            <span class="quality-badge medium">70%</span>
-                        </div>
-                        <div class="quality-desc">Good balance between quality and size</div>
+                    <div class="mode-option" data-mode="interval">
+                        <div class="mode-title">📊 Split by Interval</div>
+                        <div class="mode-desc">Split every N pages</div>
                     </div>
                     
-                    <div class="quality-option" data-quality="low">
-                        <div class="quality-title">
-                            Maximum Compression
-                            <span class="quality-badge low">50%</span>
-                        </div>
-                        <div class="quality-desc">Smallest file size, lower quality</div>
+                    <div class="mode-option" data-mode="equal">
+                        <div class="mode-title">⚖️ Split Equally</div>
+                        <div class="mode-desc">Split into equal parts</div>
                     </div>
                 </div>
 
-                <div class="compression-summary" id="compressionSummary" style="display: none;">
-                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #00ff88;">Compression Preview</div>
-                    
-                    <div class="size-comparison">
-                        <div class="size-item">
-                            <div class="size-label">Original</div>
-                            <div class="size-value" id="originalSizeDisplay">0 MB</div>
-                        </div>
-                        <div class="size-item">
-                            <div class="size-label">Compressed</div>
-                            <div class="size-value" id="compressedSizeDisplay">0 MB</div>
-                        </div>
+                <div class="split-config" id="configPages">
+                    <div class="input-group">
+                        <label class="input-label">Page Ranges (e.g., 1-5, 8-10, 15)</label>
+                        <input type="text" class="input-field" id="pageRanges" placeholder="1-5, 8-10, 15">
                     </div>
-                    
-                    <div class="size-savings" id="savingsDisplay">
-                        Estimated savings: 0%
+                    <div style="font-size: 11px; color: #999; margin-bottom: 10px;">
+                        Separate ranges with commas. Use hyphen for ranges (1-5) or single numbers (8)
                     </div>
-                    
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    
-                    <button class="btn btn-primary" id="compressBtn" style="width: 100%; margin-top: 15px;">Compress PDF</button>
                 </div>
 
-                <div class="tips">
-                    <h4>💡 Compression Tips</h4>
-                    <ul>
-                        <li>Images are the main contributor to PDF file size</li>
-                        <li>High quality preserves text clarity</li>
-                        <li>Balanced mode works well for most documents</li>
-                        <li>Maximum compression is best for storage/sharing</li>
-                    </ul>
+                <div class="split-config" id="configInterval">
+                    <div class="input-group">
+                        <label class="input-label">Split every N pages</label>
+                        <input type="number" class="input-field" id="intervalPages" placeholder="5" min="1">
+                    </div>
+                </div>
+
+                <div class="split-config" id="configEqual">
+                    <div class="input-group">
+                        <label class="input-label">Number of parts</label>
+                        <input type="number" class="input-field" id="equalParts" placeholder="3" min="2">
+                    </div>
+                </div>
+
+                <div class="split-summary" id="splitSummary" style="display: none;">
+                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #00ff88;">Split Preview</div>
+                    <div id="summaryText"></div>
+                    <button class="btn btn-primary" id="splitBtn" style="width: 100%; margin-top: 15px;">Split PDF</button>
                 </div>
             </div>
         </div>
 
         <div class="viewer">
             <div class="controls" id="controls" style="display: none;">
-                <div id="previewInfo" style="color: #ccc; font-size: 14px;">PDF loaded successfully</div>
+                <div class="preview-info" id="previewInfo">PDF loaded successfully</div>
             </div>
 
             <div class="canvas-container">
                 <div class="placeholder" id="placeholder">
-                    <h3>🗜️ PDF Compressor</h3>
-                    <p>Upload a PDF file to reduce its file size while maintaining quality</p>
+                    <h3>✂️ PDF Splitter</h3>
+                    <p>Upload a PDF file to split it into multiple documents</p>
                 </div>
                 <div class="loading" id="loading">
                     <div>Processing PDF...</div>
@@ -521,22 +497,17 @@
     </main>
 
     <script>
-        class PDFCompressor {
+        class PDFSplitter {
             constructor() {
                 this.pdfDoc = null;
                 this.pdfLibDoc = null;
                 this.totalPages = 0;
-                this.originalSize = 0;
-                this.selectedQuality = 'medium';
-                this.qualitySettings = {
-                    high: { quality: 0.9, compression: 0.1 },
-                    medium: { quality: 0.7, compression: 0.3 },
-                    low: { quality: 0.5, compression: 0.5 }
-                };
+                this.currentMode = null;
+                this.splitConfig = {};
 
                 this.uploadBox = document.getElementById('uploadBox');
                 this.pdfInput = document.getElementById('pdfInput');
-                this.compressionOptions = document.getElementById('compressionOptions');
+                this.splitOptions = document.getElementById('splitOptions');
                 this.controls = document.getElementById('controls');
                 this.placeholder = document.getElementById('placeholder');
                 this.loading = document.getElementById('loading');
@@ -552,12 +523,17 @@
 
                 this.setupDragDrop();
 
-                // Quality selection
-                document.querySelectorAll('.quality-option').forEach(option => {
-                    option.addEventListener('click', () => this.selectQuality(option.dataset.quality));
+                // Mode selection
+                document.querySelectorAll('.mode-option').forEach(option => {
+                    option.addEventListener('click', () => this.selectMode(option.dataset.mode));
                 });
 
-                document.getElementById('compressBtn').addEventListener('click', () => this.compressPDF());
+                // Input events
+                document.getElementById('pageRanges').addEventListener('input', () => this.updateSplitSummary());
+                document.getElementById('intervalPages').addEventListener('input', () => this.updateSplitSummary());
+                document.getElementById('equalParts').addEventListener('input', () => this.updateSplitSummary());
+
+                document.getElementById('splitBtn').addEventListener('click', () => this.splitPDF());
             }
 
             setupDragDrop() {
@@ -606,16 +582,15 @@
                     }).promise;
                     
                     this.totalPages = this.pdfDoc.numPages;
-                    this.originalSize = file.size;
+                    this.fileSize = file.size;
 
                     await this.renderPreview();
                     this.updateUI();
-                    this.updateCompressionPreview();
 
                     this.loading.style.display = 'none';
                     this.canvas.style.display = 'block';
                     this.controls.style.display = 'flex';
-                    this.compressionOptions.style.display = 'block';
+                    this.splitOptions.style.display = 'block';
 
                     this.showToast(`PDF loaded: ${this.totalPages} pages`, 'success');
                 } catch (error) {
@@ -649,68 +624,154 @@
                 }
             }
 
-            selectQuality(quality) {
-                this.selectedQuality = quality;
+            selectMode(mode) {
+                this.currentMode = mode;
                 
                 // Update UI
-                document.querySelectorAll('.quality-option').forEach(option => {
-                    option.classList.toggle('selected', option.dataset.quality === quality);
+                document.querySelectorAll('.mode-option').forEach(option => {
+                    option.classList.toggle('selected', option.dataset.mode === mode);
                 });
 
-                this.updateCompressionPreview();
+                document.querySelectorAll('.split-config').forEach(config => {
+                    config.classList.remove('active');
+                });
+
+                document.getElementById(`config${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
+
+                this.updateSplitSummary();
             }
 
-            updateCompressionPreview() {
-                const settings = this.qualitySettings[this.selectedQuality];
-                const estimatedSize = this.originalSize * (1 - settings.compression);
-                const savings = ((this.originalSize - estimatedSize) / this.originalSize * 100).toFixed(0);
+            updateSplitSummary() {
+                if (!this.currentMode) return;
 
-                document.getElementById('originalSizeDisplay').textContent = this.formatFileSize(this.originalSize);
-                document.getElementById('compressedSizeDisplay').textContent = this.formatFileSize(estimatedSize);
-                document.getElementById('savingsDisplay').textContent = `Estimated savings: ${savings}%`;
-                
-                const progressFill = document.getElementById('progressFill');
-                progressFill.style.width = savings + '%';
+                const summary = document.getElementById('splitSummary');
+                const summaryText = document.getElementById('summaryText');
+                let config = null;
 
-                document.getElementById('compressionSummary').style.display = 'block';
+                try {
+                    switch (this.currentMode) {
+                        case 'pages':
+                            config = this.parsePageRanges();
+                            break;
+                        case 'interval':
+                            config = this.parseInterval();
+                            break;
+                        case 'equal':
+                            config = this.parseEqual();
+                            break;
+                    }
+
+                    if (config && config.splits.length > 0) {
+                        summaryText.innerHTML = config.description;
+                        summary.style.display = 'block';
+                        this.splitConfig = config;
+                    } else {
+                        summary.style.display = 'none';
+                    }
+                } catch (error) {
+                    summaryText.textContent = error.message;
+                    summary.style.display = 'block';
+                }
             }
 
-            async compressPDF() {
-                if (!this.pdfLibDoc) {
-                    this.showToast('Please load a PDF file first', 'error');
+            parsePageRanges() {
+                const input = document.getElementById('pageRanges').value.trim();
+                if (!input) throw new Error('Please enter page ranges');
+
+                const ranges = input.split(',').map(r => r.trim()).filter(r => r);
+                const splits = [];
+
+                for (const range of ranges) {
+                    if (range.includes('-')) {
+                        const [start, end] = range.split('-').map(n => parseInt(n.trim()));
+                        if (isNaN(start) || isNaN(end) || start > end || start < 1 || end > this.totalPages) {
+                            throw new Error(`Invalid range: ${range}`);
+                        }
+                        splits.push({ start, end, name: `pages-${start}-${end}` });
+                    } else {
+                        const page = parseInt(range);
+                        if (isNaN(page) || page < 1 || page > this.totalPages) {
+                            throw new Error(`Invalid page: ${range}`);
+                        }
+                        splits.push({ start: page, end: page, name: `page-${page}` });
+                    }
+                }
+
+                return {
+                    splits,
+                    description: `Will create ${splits.length} file(s): ${splits.map(s => 
+                        s.start === s.end ? `Page ${s.start}` : `Pages ${s.start}-${s.end}`
+                    ).join(', ')}`
+                };
+            }
+
+            parseInterval() {
+                const interval = parseInt(document.getElementById('intervalPages').value);
+                if (isNaN(interval) || interval < 1) {
+                    throw new Error('Please enter a valid interval');
+                }
+
+                const splits = [];
+                for (let i = 1; i <= this.totalPages; i += interval) {
+                    const start = i;
+                    const end = Math.min(i + interval - 1, this.totalPages);
+                    splits.push({ start, end, name: `part-${Math.ceil(i / interval)}` });
+                }
+
+                return {
+                    splits,
+                    description: `Will create ${splits.length} file(s), each with ${interval} page(s) (last may have fewer)`
+                };
+            }
+
+            parseEqual() {
+                const parts = parseInt(document.getElementById('equalParts').value);
+                if (isNaN(parts) || parts < 2 || parts > this.totalPages) {
+                    throw new Error('Please enter a valid number of parts');
+                }
+
+                const pagesPerPart = Math.ceil(this.totalPages / parts);
+                const splits = [];
+
+                for (let i = 0; i < parts; i++) {
+                    const start = i * pagesPerPart + 1;
+                    const end = Math.min((i + 1) * pagesPerPart, this.totalPages);
+                    if (start <= this.totalPages) {
+                        splits.push({ start, end, name: `part-${i + 1}` });
+                    }
+                }
+
+                return {
+                    splits,
+                    description: `Will create ${splits.length} file(s), approximately ${pagesPerPart} pages each`
+                };
+            }
+
+            async splitPDF() {
+                if (!this.splitConfig || this.splitConfig.splits.length === 0) {
+                    this.showToast('Please configure split settings', 'error');
                     return;
                 }
 
                 try {
-                    this.showToast('Compressing PDF...', 'info');
+                    this.showToast('Splitting PDF...', 'info');
                     
-                    // Create a new PDF document for compression
-                    const compressedPdf = await PDFLib.PDFDocument.create();
-                    const settings = this.qualitySettings[this.selectedQuality];
-                    
-                    // Copy all pages to the new document
-                    const pageCount = this.pdfLibDoc.getPageCount();
-                    const pages = await compressedPdf.copyPages(this.pdfLibDoc, 
-                        Array.from({ length: pageCount }, (_, i) => i));
-                    
-                    pages.forEach(page => compressedPdf.addPage(page));
+                    for (const split of this.splitConfig.splits) {
+                        const newPdf = await PDFLib.PDFDocument.create();
+                        
+                        for (let pageNum = split.start; pageNum <= split.end; pageNum++) {
+                            const [copiedPage] = await newPdf.copyPages(this.pdfLibDoc, [pageNum - 1]);
+                            newPdf.addPage(copiedPage);
+                        }
 
-                    // Apply compression settings (simplified approach)
-                    const pdfBytes = await compressedPdf.save({
-                        useObjectStreams: true,
-                        addDefaultPage: false,
-                        objectsPerTick: 50
-                    });
-
-                    // Calculate actual compression ratio
-                    const actualSavings = ((this.originalSize - pdfBytes.length) / this.originalSize * 100).toFixed(1);
+                        const pdfBytes = await newPdf.save();
+                        this.downloadPDF(pdfBytes, `${split.name}.pdf`);
+                    }
                     
-                    this.downloadPDF(pdfBytes, 'compressed-document.pdf');
-                    
-                    this.showToast(`PDF compressed! Saved ${actualSavings}% (${this.formatFileSize(this.originalSize - pdfBytes.length)})`, 'success');
+                    this.showToast(`Successfully split into ${this.splitConfig.splits.length} files`, 'success');
                 } catch (error) {
-                    console.error('Compression error:', error);
-                    this.showToast('Failed to compress PDF', 'error');
+                    console.error('Split error:', error);
+                    this.showToast('Failed to split PDF', 'error');
                 }
             }
 
@@ -728,9 +789,8 @@
 
             updateUI() {
                 document.getElementById('totalPages').textContent = this.totalPages;
-                document.getElementById('originalSize').textContent = this.formatFileSize(this.originalSize);
-                document.getElementById('previewInfo').textContent = 
-                    `PDF loaded: ${this.totalPages} pages - ${this.formatFileSize(this.originalSize)}`;
+                document.getElementById('fileSize').textContent = this.formatFileSize(this.fileSize);
+                document.getElementById('previewInfo').textContent = `PDF loaded: ${this.totalPages} pages`;
             }
 
             formatFileSize(bytes) {
@@ -755,9 +815,9 @@
             }
         }
 
-        // Initialize the PDF Compressor
+        // Initialize the PDF Splitter
         document.addEventListener('DOMContentLoaded', () => {
-            new PDFCompressor();
+            new PDFSplitter();
         });
     </script>
 </body>

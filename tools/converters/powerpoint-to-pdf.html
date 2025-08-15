@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JPG to PDF Converter - PDF Pro Suite</title>
+    <title>PowerPoint to PDF Converter - PDF Pro Suite</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <style>
         * { 
@@ -60,7 +60,7 @@
         }
         
         .sidebar {
-            width: 380px;
+            width: 320px;
             background: #141414;
             border-right: 1px solid #333;
             padding: 20px;
@@ -112,7 +112,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
         }
         
         .content-area {
@@ -137,31 +137,15 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            transition: all 0.3s;
-            cursor: grab;
-        }
-        
-        .image-item:hover {
-            border-color: #00ff88;
-            background: #252525;
-        }
-        
-        .image-item.dragging {
-            opacity: 0.5;
-            cursor: grabbing;
-        }
-        
-        .image-item.drag-over {
-            border-color: #00ff88;
-            background: #003322;
         }
         
         .image-thumbnail {
-            width: 60px;
+            width: 80px;
             height: 60px;
             object-fit: cover;
             border-radius: 4px;
             border: 1px solid #555;
+            background: #333;
         }
         
         .image-info {
@@ -177,103 +161,6 @@
         .image-details {
             font-size: 12px;
             color: #999;
-        }
-        
-        .image-controls {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .drag-handle {
-            color: #666;
-            cursor: grab;
-            padding: 5px;
-        }
-        
-        .drag-handle:hover {
-            color: #00ff88;
-        }
-        
-        .order-indicator {
-            background: #00ff88;
-            color: #000;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .conversion-options {
-            margin-top: 20px;
-        }
-        
-        .page-size-selector {
-            margin-bottom: 20px;
-        }
-        
-        .size-option {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 6px;
-            padding: 12px 15px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .size-option:hover {
-            border-color: #00ff88;
-            background: #252525;
-        }
-        
-        .size-option.selected {
-            border-color: #00ff88;
-            background: #003322;
-        }
-        
-        .size-title {
-            font-weight: 500;
-            color: #ffffff;
-        }
-        
-        .size-desc {
-            font-size: 11px;
-            color: #999;
-        }
-        
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .grid-item {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-        }
-        
-        .grid-thumbnail {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-bottom: 8px;
-        }
-        
-        .grid-info {
-            font-size: 11px;
-            color: #ccc;
         }
         
         .btn {
@@ -320,17 +207,29 @@
             border-color: #ff4757;
         }
         
-        .btn-danger:hover {
-            background: #ff3742;
-            border-color: #ff3742;
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
         }
         
-        .conversion-summary {
-            margin-top: 20px;
-            padding: 15px;
-            background: #1a1a1a;
-            border-radius: 6px;
-            border: 1px solid #333;
+        .stat-item {
+            background: #222;
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #999;
         }
         
         .loading {
@@ -341,14 +240,24 @@
         }
         
         .placeholder {
-            text-align: center;
-            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
             color: #666;
+            text-align: center;
         }
         
         .placeholder h3 {
             margin-bottom: 10px;
             color: #999;
+            font-size: 24px;
+        }
+        
+        .placeholder p {
+            font-size: 16px;
+            margin-bottom: 20px;
         }
         
         .toast {
@@ -390,57 +299,94 @@
             padding-bottom: 8px;
         }
         
-        .stats {
-            display: flex;
+        .warning-box {
+            background: #2a1a00;
+            border: 1px solid #ffa500;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .warning-box h4 {
+            color: #ffa500;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        
+        .warning-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .warning-box li {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 5px;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        .warning-box li::before {
+            content: '⚠️';
+            position: absolute;
+            left: 0;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 15px;
-            margin-bottom: 15px;
+            margin-top: 20px;
         }
         
-        .stat-item {
-            background: #222;
-            padding: 8px 12px;
-            border-radius: 4px;
+        .grid-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
             text-align: center;
-            flex: 1;
         }
         
-        .stat-number {
-            font-size: 18px;
-            font-weight: 600;
-            color: #00ff88;
+        .grid-thumbnail {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background: #333;
         }
         
-        .stat-label {
+        .grid-info {
             font-size: 11px;
-            color: #999;
+            color: #ccc;
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>📷 JPG to PDF Converter</h1>
-        <a href="index.html" class="back-btn">← Back to Tools</a>
+        <h1>📊 PowerPoint to PDF Converter</h1>
+        <a href="../../index.html" class="back-btn">← Back to Tools</a>
     </header>
 
     <main class="main">
         <div class="sidebar">
             <div class="upload-section">
-                <div class="section-title">Upload Images</div>
+                <div class="section-title">Upload Images from Slides</div>
                 <div class="upload-box" id="uploadBox">
                     <span class="upload-icon">🖼️</span>
-                    <div>Drop images here or click to browse</div>
-                    <div style="font-size: 12px; color: #666; margin-top: 8px;">JPG, PNG, GIF supported</div>
+                    <div>Drop slide images here or click to browse</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">PNG, JPG supported from PowerPoint exports</div>
                 </div>
                 <input type="file" id="imageInput" accept="image/*" multiple style="display: none">
             </div>
 
             <div class="image-list" id="imageList" style="display: none;">
-                <div class="section-title">Images to Convert</div>
+                <div class="section-title">Slide Images</div>
                 
                 <div class="stats">
                     <div class="stat-item">
                         <div class="stat-number" id="imageCount">0</div>
-                        <div class="stat-label">Images</div>
+                        <div class="stat-label">Slides</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number" id="totalSize">0</div>
@@ -449,49 +395,23 @@
                 </div>
 
                 <div style="font-size: 12px; color: #999; margin-bottom: 15px;">
-                    💡 Drag images to reorder them
+                    💡 Images will be converted to PDF pages in order
                 </div>
 
                 <div id="imageItems"></div>
-            </div>
 
-            <div class="conversion-options" id="conversionOptions" style="display: none;">
-                <div class="section-title">PDF Settings</div>
-                
-                <div class="page-size-selector">
-                    <div class="size-option selected" data-size="a4">
-                        <div>
-                            <div class="size-title">A4 Portrait</div>
-                            <div class="size-desc">210 × 297 mm</div>
-                        </div>
-                    </div>
-                    
-                    <div class="size-option" data-size="a4-landscape">
-                        <div>
-                            <div class="size-title">A4 Landscape</div>
-                            <div class="size-desc">297 × 210 mm</div>
-                        </div>
-                    </div>
-                    
-                    <div class="size-option" data-size="letter">
-                        <div>
-                            <div class="size-title">Letter</div>
-                            <div class="size-desc">8.5 × 11 inch</div>
-                        </div>
-                    </div>
-                    
-                    <div class="size-option" data-size="fit">
-                        <div>
-                            <div class="size-title">Fit to Image</div>
-                            <div class="size-desc">Auto-size pages</div>
-                        </div>
-                    </div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-primary" id="convertBtn" style="width: 100%;" disabled>Create PDF</button>
                 </div>
 
-                <div class="conversion-summary">
-                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #00ff88;">Ready to Convert</div>
-                    <div id="summaryText"></div>
-                    <button class="btn btn-primary" id="convertBtn" style="width: 100%; margin-top: 15px;">Create PDF</button>
+                <div class="warning-box">
+                    <h4>📊 PowerPoint to PDF Notes</h4>
+                    <ul>
+                        <li>Export PowerPoint slides as images first</li>
+                        <li>Upload slide images in presentation order</li>
+                        <li>Each image becomes one PDF page</li>
+                        <li>Maintains original slide aspect ratios</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -499,15 +419,29 @@
         <div class="viewer">
             <div class="controls" id="controls" style="display: none;">
                 <div id="previewInfo" style="color: #ccc; font-size: 14px;">Images loaded successfully</div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-small" id="clearAllBtn">Clear All</button>
+                    <button class="btn btn-small" id="previewPdfBtn">Preview PDF</button>
+                </div>
             </div>
 
             <div class="content-area">
                 <div class="placeholder" id="placeholder">
-                    <h3>📷 JPG to PDF Converter</h3>
-                    <p>Upload multiple images to combine them into a single PDF document</p>
+                    <h3>📊 PowerPoint to PDF</h3>
+                    <p>Convert PowerPoint slide images to PDF document</p>
+                    <div style="font-size: 14px; color: #777; margin-top: 20px;">
+                        📤 Export slides from PowerPoint as images<br>
+                        📂 Upload the slide images here<br>
+                        📄 Get a professional PDF document<br>
+                        🔄 Maintains original slide layouts
+                    </div>
+                    <div style="font-size: 13px; color: #ffa500; margin-top: 20px; font-weight: 500;">
+                        💡 How to export slides from PowerPoint:<br>
+                        File → Export → Change File Type → PNG/JPG
+                    </div>
                 </div>
                 <div class="loading" id="loading">
-                    <div>Creating PDF...</div>
+                    <div>Creating PDF from slides...</div>
                 </div>
                 <div class="image-grid" id="imageGrid"></div>
             </div>
@@ -515,22 +449,13 @@
     </main>
 
     <script>
-        class JPGToPDFConverter {
+        class PowerPointToPDFConverter {
             constructor() {
                 this.images = [];
-                this.selectedPageSize = 'a4';
-                this.draggedIndex = null;
-                this.pageSizes = {
-                    a4: { width: 595, height: 842 },
-                    'a4-landscape': { width: 842, height: 595 },
-                    letter: { width: 612, height: 792 },
-                    fit: null // Auto-size based on image
-                };
 
                 this.uploadBox = document.getElementById('uploadBox');
                 this.imageInput = document.getElementById('imageInput');
                 this.imageList = document.getElementById('imageList');
-                this.conversionOptions = document.getElementById('conversionOptions');
                 this.controls = document.getElementById('controls');
                 this.placeholder = document.getElementById('placeholder');
                 this.loading = document.getElementById('loading');
@@ -545,12 +470,9 @@
 
                 this.setupDragDrop();
 
-                // Page size selection
-                document.querySelectorAll('.size-option').forEach(option => {
-                    option.addEventListener('click', () => this.selectPageSize(option.dataset.size));
-                });
-
                 document.getElementById('convertBtn').addEventListener('click', () => this.convertToPDF());
+                document.getElementById('clearAllBtn').addEventListener('click', () => this.clearAll());
+                document.getElementById('previewPdfBtn').addEventListener('click', () => this.togglePreview());
             }
 
             setupDragDrop() {
@@ -582,7 +504,7 @@
                     return;
                 }
 
-                this.showToast(`Loading ${files.length} image(s)...`, 'info');
+                this.showToast(`Loading ${files.length} slide image(s)...`, 'info');
 
                 for (const file of files) {
                     if (!file.type.startsWith('image/')) continue;
@@ -606,8 +528,18 @@
                     }
                 }
 
+                // Sort images by filename for proper slide order
+                this.images.sort((a, b) => {
+                    const aMatch = a.name.match(/(\d+)/);
+                    const bMatch = b.name.match(/(\d+)/);
+                    if (aMatch && bMatch) {
+                        return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+                    }
+                    return a.name.localeCompare(b.name);
+                });
+
                 this.updateUI();
-                this.showToast(`Loaded ${this.images.length} image(s)`, 'success');
+                this.showToast(`Loaded ${this.images.length} slide image(s)`, 'success');
             }
 
             async loadImageData(file) {
@@ -632,13 +564,11 @@
                 if (this.images.length > 0) {
                     this.placeholder.style.display = 'none';
                     this.imageList.style.display = 'block';
-                    this.conversionOptions.style.display = 'block';
                     this.controls.style.display = 'flex';
                     
                     this.renderImageList();
                     this.renderImageGrid();
                     this.updateStats();
-                    this.updateSummary();
                 }
             }
 
@@ -649,23 +579,16 @@
                 this.images.forEach((image, index) => {
                     const imageItem = document.createElement('div');
                     imageItem.className = 'image-item';
-                    imageItem.draggable = true;
-                    imageItem.dataset.index = index;
 
                     imageItem.innerHTML = `
-                        <div class="order-indicator">${index + 1}</div>
-                        <div class="drag-handle">⋮⋮</div>
                         <img src="${image.url}" class="image-thumbnail" alt="${image.name}">
                         <div class="image-info">
-                            <div class="image-name">${image.name}</div>
+                            <div class="image-name">Slide ${index + 1}: ${image.name}</div>
                             <div class="image-details">${image.width} × ${image.height} px • ${this.formatFileSize(image.size)}</div>
                         </div>
-                        <div class="image-controls">
-                            <button class="btn btn-small btn-danger" onclick="jpgToPdfConverter.removeImage(${index})">Remove</button>
-                        </div>
+                        <button class="btn btn-small btn-danger" onclick="powerPointToPdfConverter.removeImage(${index})">Remove</button>
                     `;
 
-                    this.setupItemDragEvents(imageItem, index);
                     imageItems.appendChild(imageItem);
                 });
             }
@@ -673,56 +596,17 @@
             renderImageGrid() {
                 this.imageGrid.innerHTML = '';
 
-                this.images.forEach(image => {
+                this.images.forEach((image, index) => {
                     const gridItem = document.createElement('div');
                     gridItem.className = 'grid-item';
 
                     gridItem.innerHTML = `
                         <img src="${image.url}" class="grid-thumbnail" alt="${image.name}">
-                        <div class="grid-info">${image.name}</div>
+                        <div class="grid-info">Slide ${index + 1}</div>
                     `;
 
                     this.imageGrid.appendChild(gridItem);
                 });
-            }
-
-            setupItemDragEvents(item, index) {
-                item.addEventListener('dragstart', (e) => {
-                    this.draggedIndex = index;
-                    item.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                });
-
-                item.addEventListener('dragend', () => {
-                    item.classList.remove('dragging');
-                    this.draggedIndex = null;
-                });
-
-                item.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    item.classList.add('drag-over');
-                });
-
-                item.addEventListener('dragleave', () => {
-                    item.classList.remove('drag-over');
-                });
-
-                item.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    item.classList.remove('drag-over');
-                    
-                    if (this.draggedIndex !== null && this.draggedIndex !== index) {
-                        this.reorderImage(this.draggedIndex, index);
-                    }
-                });
-            }
-
-            reorderImage(fromIndex, toIndex) {
-                const movedImage = this.images.splice(fromIndex, 1)[0];
-                this.images.splice(toIndex, 0, movedImage);
-                this.renderImageList();
-                this.renderImageGrid();
-                this.showToast('Images reordered', 'success');
             }
 
             removeImage(index) {
@@ -732,64 +616,52 @@
                 
                 if (this.images.length === 0) {
                     this.imageList.style.display = 'none';
-                    this.conversionOptions.style.display = 'none';
                     this.controls.style.display = 'none';
-                    this.placeholder.style.display = 'block';
+                    this.placeholder.style.display = 'flex';
                     this.imageGrid.innerHTML = '';
                 } else {
                     this.renderImageList();
                     this.renderImageGrid();
                     this.updateStats();
-                    this.updateSummary();
                 }
                 
                 this.showToast(`Removed ${imageName}`, 'success');
             }
 
-            selectPageSize(size) {
-                this.selectedPageSize = size;
-                
-                // Update UI
-                document.querySelectorAll('.size-option').forEach(option => {
-                    option.classList.toggle('selected', option.dataset.size === size);
-                });
-
-                this.updateSummary();
+            clearAll() {
+                this.images.forEach(image => URL.revokeObjectURL(image.url));
+                this.images = [];
+                this.imageList.style.display = 'none';
+                this.controls.style.display = 'none';
+                this.placeholder.style.display = 'flex';
+                this.imageGrid.innerHTML = '';
+                this.showToast('All slides cleared', 'success');
             }
 
-            updateStats() {
-                const totalSize = this.images.reduce((sum, img) => sum + img.size, 0);
-                document.getElementById('imageCount').textContent = this.images.length;
-                document.getElementById('totalSize').textContent = this.formatFileSize(totalSize);
-            }
-
-            updateSummary() {
-                const summaryText = document.getElementById('summaryText');
-                const pageSize = this.pageSizes[this.selectedPageSize];
-                
-                let sizeText = pageSize ? 
-                    `${this.selectedPageSize.toUpperCase()} size` : 
-                    'Auto-sized pages';
-                
-                summaryText.textContent = 
-                    `Create PDF with ${this.images.length} image(s) in ${sizeText}`;
+            togglePreview() {
+                if (this.imageGrid.style.display === 'none') {
+                    this.imageGrid.style.display = 'grid';
+                } else {
+                    this.imageGrid.style.display = 'none';
+                }
             }
 
             async convertToPDF() {
                 if (this.images.length === 0) {
-                    this.showToast('Please add images first', 'error');
+                    this.showToast('Please add slide images first', 'error');
                     return;
                 }
 
                 try {
-                    this.showToast('Creating PDF...', 'info');
+                    this.showToast('Converting slides to PDF...', 'info');
                     this.loading.style.display = 'block';
                     this.imageGrid.style.display = 'none';
+                    document.getElementById('convertBtn').disabled = true;
                     
                     const pdfDoc = await PDFLib.PDFDocument.create();
 
                     for (const image of this.images) {
-                        // Convert image to proper format for PDF-lib
+                        // Convert image to PDF page
                         const imageBytes = await this.getImageBytes(image.file);
                         let pdfImage;
 
@@ -799,44 +671,45 @@
                             pdfImage = await pdfDoc.embedPng(imageBytes);
                         }
 
-                        // Calculate page size
-                        let pageSize = this.pageSizes[this.selectedPageSize];
-                        if (!pageSize) {
-                            // Fit to image
-                            pageSize = { width: image.width, height: image.height };
+                        // Create page with slide dimensions (maintain aspect ratio)
+                        const aspectRatio = image.width / image.height;
+                        let pageWidth, pageHeight;
+                        
+                        if (aspectRatio > 1) {
+                            // Landscape slide
+                            pageWidth = 842; // A4 landscape width
+                            pageHeight = pageWidth / aspectRatio;
+                        } else {
+                            // Portrait slide
+                            pageHeight = 595; // A4 width as height
+                            pageWidth = pageHeight * aspectRatio;
                         }
 
-                        const page = pdfDoc.addPage([pageSize.width, pageSize.height]);
+                        const page = pdfDoc.addPage([pageWidth, pageHeight]);
 
-                        // Calculate image position and size to fit the page
-                        const { width, height } = this.calculateImageSize(
-                            image.width, image.height, 
-                            pageSize.width, pageSize.height
-                        );
-
-                        const x = (pageSize.width - width) / 2;
-                        const y = (pageSize.height - height) / 2;
-
+                        // Draw image to fill the entire page
                         page.drawImage(pdfImage, {
-                            x: x,
-                            y: y,
-                            width: width,
-                            height: height
+                            x: 0,
+                            y: 0,
+                            width: pageWidth,
+                            height: pageHeight
                         });
                     }
 
                     const pdfBytes = await pdfDoc.save();
-                    this.downloadPDF(pdfBytes, 'images-to-pdf.pdf');
+                    this.downloadPDF(pdfBytes, 'powerpoint-presentation.pdf');
 
                     this.loading.style.display = 'none';
                     this.imageGrid.style.display = 'grid';
+                    document.getElementById('convertBtn').disabled = false;
                     
-                    this.showToast(`Successfully created PDF with ${this.images.length} images`, 'success');
+                    this.showToast(`Successfully created PDF with ${this.images.length} slides`, 'success');
                 } catch (error) {
                     console.error('Conversion error:', error);
                     this.showToast('Failed to create PDF', 'error');
                     this.loading.style.display = 'none';
                     this.imageGrid.style.display = 'grid';
+                    document.getElementById('convertBtn').disabled = false;
                 }
             }
 
@@ -849,25 +722,6 @@
                 });
             }
 
-            calculateImageSize(imgWidth, imgHeight, pageWidth, pageHeight) {
-                const imgRatio = imgWidth / imgHeight;
-                const pageRatio = pageWidth / pageHeight;
-
-                let width, height;
-
-                if (imgRatio > pageRatio) {
-                    // Image is wider, fit to width
-                    width = pageWidth * 0.9; // Leave 10% margin
-                    height = width / imgRatio;
-                } else {
-                    // Image is taller, fit to height
-                    height = pageHeight * 0.9; // Leave 10% margin
-                    width = height * imgRatio;
-                }
-
-                return { width, height };
-            }
-
             downloadPDF(pdfBytes, filename) {
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const url = URL.createObjectURL(blob);
@@ -878,6 +732,13 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+            }
+
+            updateStats() {
+                const totalSize = this.images.reduce((sum, img) => sum + img.size, 0);
+                document.getElementById('imageCount').textContent = this.images.length;
+                document.getElementById('totalSize').textContent = this.formatFileSize(totalSize);
+                document.getElementById('convertBtn').disabled = this.images.length === 0;
             }
 
             formatFileSize(bytes) {
@@ -903,11 +764,11 @@
         }
 
         // Global instance for button onclick handlers
-        let jpgToPdfConverter;
+        let powerPointToPdfConverter;
 
         // Initialize the converter
         document.addEventListener('DOMContentLoaded', () => {
-            jpgToPdfConverter = new JPGToPDFConverter();
+            powerPointToPdfConverter = new PowerPointToPDFConverter();
         });
     </script>
 </body>

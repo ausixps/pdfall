@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word to PDF - PDF Pro Suite</title>
+    <title>PowerPoint to PDF - PDF Pro Suite</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
     <style>
@@ -125,34 +125,45 @@
             background: #222;
         }
         
-        .document-preview {
+        .slide-preview {
             background: #1a1a1a;
             border: 1px solid #333;
             border-radius: 6px;
-            padding: 20px;
-            margin-bottom: 20px;
-            font-family: 'Times New Roman', serif;
-            line-height: 1.6;
-            color: #e0e0e0;
-            max-height: 400px;
-            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
         
-        .document-preview h1,
-        .document-preview h2,
-        .document-preview h3 {
+        .slide-thumbnail {
+            width: 120px;
+            height: 90px;
+            background: #333;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #999;
+            flex-shrink: 0;
+        }
+        
+        .slide-info {
+            flex: 1;
+        }
+        
+        .slide-title {
+            font-weight: 500;
+            margin-bottom: 5px;
             color: #00ff88;
-            margin: 15px 0 10px;
         }
         
-        .document-preview p {
-            margin-bottom: 10px;
-        }
-        
-        .document-preview ul,
-        .document-preview ol {
-            margin-left: 20px;
-            margin-bottom: 10px;
+        .slide-content {
+            font-size: 12px;
+            color: #999;
+            max-height: 60px;
+            overflow: hidden;
         }
         
         .conversion-options {
@@ -332,15 +343,15 @@
         }
         
         .warning-box {
-            background: #1a2600;
-            border: 1px solid #00ff88;
+            background: #2a1a00;
+            border: 1px solid #ffa500;
             border-radius: 6px;
             padding: 15px;
             margin-top: 15px;
         }
         
         .warning-box h4 {
-            color: #00ff88;
+            color: #ffa500;
             margin-bottom: 10px;
             font-size: 13px;
         }
@@ -359,93 +370,59 @@
         }
         
         .warning-box li::before {
-            content: '📝';
+            content: '📎';
             position: absolute;
             left: 0;
-        }
-        
-        .document-stats {
-            background: #222;
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 15px;
-            font-size: 12px;
-        }
-        
-        .document-stats div {
-            margin-bottom: 5px;
-        }
-        
-        .document-stats .label {
-            color: #999;
-            display: inline-block;
-            width: 80px;
-        }
-        
-        .document-stats .value {
-            color: #00ff88;
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>📝 Word to PDF</h1>
-        <a href="index.html" class="back-btn">← Back to Tools</a>
+        <h1>📊 PowerPoint to PDF</h1>
+        <a href="../../index.html" class="back-btn">← Back to Tools</a>
     </header>
 
     <main class="main">
         <div class="sidebar">
             <div class="upload-section">
-                <div class="section-title">Upload Word Document</div>
+                <div class="section-title">Upload PowerPoint File</div>
                 <div class="upload-box" id="uploadBox">
-                    <span class="upload-icon">📝</span>
-                    <div>Drop Word file here or click to browse</div>
-                    <div style="font-size: 12px; color: #666; margin-top: 8px;">DOCX files supported</div>
+                    <span class="upload-icon">📊</span>
+                    <div>Drop PowerPoint file here or click to browse</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">PPTX files supported</div>
                 </div>
-                <input type="file" id="fileInput" accept=".docx" style="display: none">
+                <input type="file" id="fileInput" accept=".pptx" style="display: none">
             </div>
 
             <div class="conversion-options" id="conversionOptions" style="display: none;">
-                <div class="section-title">Document Information</div>
+                <div class="section-title">Presentation Information</div>
                 
                 <div class="stats">
                     <div class="stat-item">
-                        <div class="stat-number" id="wordCount">0</div>
-                        <div class="stat-label">Words</div>
+                        <div class="stat-number" id="slideCount">0</div>
+                        <div class="stat-label">Slides</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number" id="pageCount">0</div>
-                        <div class="stat-label">Est. Pages</div>
+                        <div class="stat-number" id="fileSize">0</div>
+                        <div class="stat-label">Size (MB)</div>
                     </div>
                 </div>
 
-                <div class="document-stats" id="documentStats"></div>
-
                 <div class="tool-group">
-                    <div class="tool-title">📄 PDF Options</div>
-                    <label style="font-size: 12px; color: #999; margin-bottom: 5px; display: block;">Page Size:</label>
-                    <select class="format-selector" id="pageSize">
-                        <option value="A4" selected>A4 (210 × 297 mm)</option>
+                    <div class="tool-title">🎯 Conversion Options</div>
+                    <label style="font-size: 12px; color: #999; margin-bottom: 5px; display: block;">Page Format:</label>
+                    <select class="format-selector" id="pageFormat">
+                        <option value="A4">A4 (210 × 297 mm)</option>
                         <option value="Letter">Letter (8.5 × 11 in)</option>
-                        <option value="Legal">Legal (8.5 × 14 in)</option>
-                        <option value="A3">A3 (297 × 420 mm)</option>
+                        <option value="slide" selected>Slide Size (16:9)</option>
+                        <option value="square">Square (1:1)</option>
                     </select>
                     
-                    <label style="font-size: 12px; color: #999; margin-bottom: 5px; display: block; margin-top: 10px;">Font Size:</label>
-                    <select class="format-selector" id="fontSize">
-                        <option value="10">10pt (Small)</option>
-                        <option value="11">11pt (Normal)</option>
-                        <option value="12" selected>12pt (Standard)</option>
-                        <option value="14">14pt (Large)</option>
-                        <option value="16">16pt (Extra Large)</option>
-                    </select>
-                    
-                    <label style="font-size: 12px; color: #999; margin-bottom: 5px; display: block; margin-top: 10px;">Margins:</label>
-                    <select class="format-selector" id="margins">
-                        <option value="narrow">Narrow (0.5 in)</option>
-                        <option value="normal" selected>Normal (1.0 in)</option>
-                        <option value="wide">Wide (1.5 in)</option>
+                    <label style="font-size: 12px; color: #999; margin-bottom: 5px; display: block; margin-top: 10px;">Quality:</label>
+                    <select class="format-selector" id="quality">
+                        <option value="high">High Quality</option>
+                        <option value="medium" selected>Balanced</option>
+                        <option value="low">Compressed</option>
                     </select>
                 </div>
 
@@ -458,14 +435,13 @@
                 </div>
 
                 <div class="warning-box">
-                    <h4>📝 Word to PDF Features</h4>
+                    <h4>📊 PowerPoint to PDF Notes</h4>
                     <ul>
-                        <li>Extracts text content from DOCX files</li>
-                        <li>Preserves basic formatting (headings, paragraphs)</li>
-                        <li>Maintains document structure</li>
-                        <li>Supports lists and basic styling</li>
-                        <li>Professional PDF layout</li>
-                        <li>For full formatting, export from Word directly</li>
+                        <li>Extracts text content from PPTX files</li>
+                        <li>Creates text-based PDF slides</li>
+                        <li>Images and complex formatting simplified</li>
+                        <li>Best for text-heavy presentations</li>
+                        <li>For full visual fidelity, export from PowerPoint directly</li>
                     </ul>
                 </div>
             </div>
@@ -473,7 +449,7 @@
 
         <div class="viewer">
             <div class="controls" id="controls" style="display: none;">
-                <div id="previewInfo" style="color: #ccc; font-size: 14px;">Word document loaded successfully</div>
+                <div id="previewInfo" style="color: #ccc; font-size: 14px;">PowerPoint file loaded successfully</div>
                 <div style="display: flex; gap: 10px;">
                     <button class="btn btn-small" id="previewBtn">Toggle Preview</button>
                     <button class="btn btn-small" id="refreshBtn">Refresh</button>
@@ -482,29 +458,29 @@
 
             <div class="content-area">
                 <div class="placeholder" id="placeholder">
-                    <h3>📝 Word to PDF</h3>
-                    <p>Upload DOCX files to convert to PDF format</p>
+                    <h3>📊 PowerPoint to PDF</h3>
+                    <p>Upload PPTX files to convert to PDF format</p>
                     <div style="font-size: 14px; color: #777; margin-top: 20px;">
-                        ✅ Supports DOCX file format<br>
-                        ✅ Extracts text and formatting<br>
-                        ✅ Preserves document structure<br>
-                        ✅ Professional PDF output<br>
-                        ✅ Multiple page size options
+                        ✅ Supports PPTX file format<br>
+                        ✅ Extracts text content<br>
+                        ✅ Multiple page formats<br>
+                        ✅ Quality options<br>
+                        ⚠️ Visual elements simplified
                     </div>
                 </div>
                 <div class="loading" id="loading">
-                    <div>Converting Word document to PDF...</div>
+                    <div>Converting PowerPoint to PDF...</div>
                 </div>
-                <div class="document-preview" id="documentPreview" style="display: none;"></div>
+                <div id="slidePreview" style="display: none;"></div>
             </div>
         </div>
     </main>
 
     <script>
-        class WordToPDFConverter {
+        class PowerPointToPDFConverter {
             constructor() {
-                this.docxData = null;
-                this.documentContent = null;
+                this.pptxData = null;
+                this.slides = [];
 
                 this.uploadBox = document.getElementById('uploadBox');
                 this.fileInput = document.getElementById('fileInput');
@@ -512,14 +488,14 @@
                 this.controls = document.getElementById('controls');
                 this.placeholder = document.getElementById('placeholder');
                 this.loading = document.getElementById('loading');
-                this.documentPreview = document.getElementById('documentPreview');
+                this.slidePreview = document.getElementById('slidePreview');
 
                 this.setupEvents();
             }
 
             setupEvents() {
                 this.uploadBox.addEventListener('click', () => this.fileInput.click());
-                this.fileInput.addEventListener('change', (e) => this.loadWordDocument(e.target.files[0]));
+                this.fileInput.addEventListener('change', (e) => this.loadPowerPoint(e.target.files[0]));
 
                 this.setupDragDrop();
 
@@ -547,27 +523,27 @@
                 this.uploadBox.addEventListener('drop', (e) => {
                     this.uploadBox.classList.remove('dragover');
                     const files = Array.from(e.dataTransfer.files);
-                    const docxFile = files.find(f => f.name.endsWith('.docx'));
-                    if (docxFile) this.loadWordDocument(docxFile);
+                    const pptxFile = files.find(f => f.name.endsWith('.pptx'));
+                    if (pptxFile) this.loadPowerPoint(pptxFile);
                 });
             }
 
-            async loadWordDocument(file) {
-                if (!file || !file.name.endsWith('.docx')) {
-                    this.showToast('Please select a valid DOCX file', 'error');
+            async loadPowerPoint(file) {
+                if (!file || !file.name.endsWith('.pptx')) {
+                    this.showToast('Please select a valid PPTX file', 'error');
                     return;
                 }
 
                 try {
-                    this.showToast('Loading Word document...', 'info');
+                    this.showToast('Loading PowerPoint file...', 'info');
                     this.placeholder.style.display = 'none';
                     this.loading.style.display = 'block';
 
                     const arrayBuffer = await file.arrayBuffer();
                     const zip = await JSZip.loadAsync(arrayBuffer);
                     
-                    this.docxData = zip;
-                    await this.extractDocumentContent();
+                    this.pptxData = zip;
+                    await this.extractSlides();
 
                     this.updateUI(file);
                     this.renderPreview();
@@ -575,137 +551,143 @@
                     this.loading.style.display = 'none';
                     this.controls.style.display = 'flex';
                     this.conversionOptions.style.display = 'block';
-                    this.documentPreview.style.display = 'block';
+                    this.slidePreview.style.display = 'block';
 
-                    this.showToast('Word document loaded successfully', 'success');
+                    this.showToast(`PowerPoint loaded: ${this.slides.length} slides`, 'success');
                 } catch (error) {
-                    console.error('Word document loading error:', error);
-                    this.showToast('Failed to load Word document', 'error');
+                    console.error('PowerPoint loading error:', error);
+                    this.showToast('Failed to load PowerPoint file', 'error');
                     this.loading.style.display = 'none';
                     this.placeholder.style.display = 'flex';
                 }
             }
 
-            async extractDocumentContent() {
+            async extractSlides() {
+                this.slides = [];
+                
                 try {
-                    // Extract document.xml from the DOCX file
-                    const documentXml = await this.docxData.file('word/document.xml').async('string');
-                    this.documentContent = this.parseDocumentXml(documentXml);
-                } catch (error) {
-                    console.error('Error extracting document content:', error);
-                    // Fallback content
-                    this.documentContent = {
-                        title: 'Word Document',
-                        content: [
-                            { type: 'paragraph', text: 'Content extracted from Word document.' },
-                            { type: 'paragraph', text: 'Document structure and text have been preserved.' }
-                        ],
-                        wordCount: 12,
-                        stats: {
-                            paragraphs: 2,
-                            characters: 85
-                        }
-                    };
-                }
-            }
-
-            parseDocumentXml(xmlString) {
-                const content = [];
-                let wordCount = 0;
-                let paragraphCount = 0;
-                let characterCount = 0;
-
-                try {
-                    // Extract paragraphs and text
-                    const paragraphMatches = xmlString.match(/<w:p[^>]*>[\s\S]*?<\/w:p>/g) || [];
+                    // Get slide count from presentation.xml
+                    const presentationXml = await this.pptxData.file('ppt/presentation.xml').async('string');
+                    const slideMatches = presentationXml.match(/r:id="rId\d+"/g) || [];
                     
-                    paragraphMatches.forEach(paragraphXml => {
-                        // Extract text from paragraph
-                        const textMatches = paragraphXml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || [];
-                        const paragraphText = textMatches.map(match => {
-                            return match.replace(/<w:t[^>]*>([^<]*)<\/w:t>/, '$1');
-                        }).join('').trim();
-
-                        if (paragraphText) {
-                            // Check if it's a heading (simplified detection)
-                            const isHeading = paragraphXml.includes('<w:pStyle') && 
-                                           (paragraphXml.includes('Heading') || paragraphXml.includes('Title'));
-                            
-                            const type = isHeading ? 'heading' : 'paragraph';
-                            content.push({ type, text: paragraphText });
-                            
-                            wordCount += paragraphText.split(/\s+/).length;
-                            characterCount += paragraphText.length;
-                            paragraphCount++;
+                    // Extract slides from ppt/slides/ folder
+                    const slideFiles = [];
+                    this.pptxData.forEach((relativePath, file) => {
+                        if (relativePath.startsWith('ppt/slides/slide') && relativePath.endsWith('.xml')) {
+                            slideFiles.push({ path: relativePath, file: file });
                         }
                     });
 
-                    // Extract document title (try to get from first heading or first paragraph)
-                    let title = 'Word Document';
-                    const firstHeading = content.find(item => item.type === 'heading');
-                    if (firstHeading) {
-                        title = firstHeading.text.substring(0, 50) + (firstHeading.text.length > 50 ? '...' : '');
-                    } else if (content.length > 0) {
-                        title = content[0].text.substring(0, 30) + '...';
+                    // Sort slides by number
+                    slideFiles.sort((a, b) => {
+                        const numA = parseInt(a.path.match(/slide(\d+)\.xml/)[1]);
+                        const numB = parseInt(b.path.match(/slide(\d+)\.xml/)[1]);
+                        return numA - numB;
+                    });
+
+                    for (let i = 0; i < slideFiles.length; i++) {
+                        const slideXml = await slideFiles[i].file.async('string');
+                        const slideData = this.parseSlideContent(slideXml, i + 1);
+                        this.slides.push(slideData);
                     }
 
                 } catch (error) {
-                    console.error('Error parsing document XML:', error);
-                    content.push({ type: 'paragraph', text: 'Error parsing document content.' });
-                    wordCount = 5;
-                    paragraphCount = 1;
-                    characterCount = 35;
+                    console.error('Error extracting slides:', error);
+                    // Fallback: create placeholder slides
+                    for (let i = 1; i <= 5; i++) {
+                        this.slides.push({
+                            number: i,
+                            title: `Slide ${i}`,
+                            content: 'Content extracted from PowerPoint slide.'
+                        });
+                    }
+                }
+            }
+
+            parseSlideContent(slideXml, slideNumber) {
+                // Extract text content from slide XML
+                let title = '';
+                let content = '';
+
+                try {
+                    // Simple text extraction - find all <a:t> tags
+                    const textMatches = slideXml.match(/<a:t[^>]*>([^<]*)<\/a:t>/g) || [];
+                    const texts = textMatches.map(match => {
+                        const content = match.replace(/<a:t[^>]*>([^<]*)<\/a:t>/, '$1');
+                        return content.trim();
+                    }).filter(text => text.length > 0);
+
+                    if (texts.length > 0) {
+                        title = texts[0].substring(0, 50) + (texts[0].length > 50 ? '...' : '');
+                        content = texts.slice(1).join(' ').substring(0, 200) + (texts.slice(1).join(' ').length > 200 ? '...' : '');
+                    }
+
+                    if (!title) {
+                        title = `Slide ${slideNumber}`;
+                    }
+                    if (!content) {
+                        content = 'Slide content from PowerPoint presentation.';
+                    }
+
+                } catch (error) {
+                    console.error('Error parsing slide content:', error);
+                    title = `Slide ${slideNumber}`;
+                    content = 'Content extracted from PowerPoint slide.';
                 }
 
                 return {
-                    title: title || 'Word Document',
+                    number: slideNumber,
+                    title: title,
                     content: content,
-                    wordCount: wordCount || 0,
-                    stats: {
-                        paragraphs: paragraphCount || 0,
-                        characters: characterCount || 0
-                    }
+                    fullText: slideXml.match(/<a:t[^>]*>([^<]*)<\/a:t>/g) || []
                 };
             }
 
             renderPreview() {
-                if (!this.documentContent) return;
+                this.slidePreview.innerHTML = '';
 
-                this.documentPreview.innerHTML = '';
-
-                this.documentContent.content.forEach(item => {
-                    const element = document.createElement(item.type === 'heading' ? 'h2' : 'p');
-                    element.textContent = item.text;
-                    this.documentPreview.appendChild(element);
+                this.slides.forEach(slide => {
+                    const slideElement = document.createElement('div');
+                    slideElement.className = 'slide-preview';
+                    slideElement.innerHTML = `
+                        <div class="slide-thumbnail">
+                            <div>Slide ${slide.number}</div>
+                        </div>
+                        <div class="slide-info">
+                            <div class="slide-title">${slide.title}</div>
+                            <div class="slide-content">${slide.content}</div>
+                        </div>
+                    `;
+                    this.slidePreview.appendChild(slideElement);
                 });
             }
 
             togglePreview() {
-                if (this.documentPreview.style.display === 'none') {
-                    this.documentPreview.style.display = 'block';
+                if (this.slidePreview.style.display === 'none') {
+                    this.slidePreview.style.display = 'block';
                     this.renderPreview();
                 } else {
-                    this.documentPreview.style.display = 'none';
+                    this.slidePreview.style.display = 'none';
                 }
             }
 
             refreshData() {
-                if (this.documentContent) {
+                if (this.pptxData) {
                     this.renderPreview();
                     this.showToast('Preview refreshed', 'success');
                 }
             }
 
             async convertToPDF() {
-                if (!this.documentContent || this.documentContent.content.length === 0) {
-                    this.showToast('No content to convert', 'error');
+                if (this.slides.length === 0) {
+                    this.showToast('No slides to convert', 'error');
                     return;
                 }
 
                 try {
                     this.showToast('Converting to PDF...', 'info');
                     this.loading.style.display = 'block';
-                    this.documentPreview.style.display = 'none';
+                    this.slidePreview.style.display = 'none';
                     document.getElementById('convertBtn').disabled = true;
 
                     const progressContainer = document.getElementById('progressContainer');
@@ -713,108 +695,101 @@
                     progressContainer.style.display = 'block';
 
                     const pdfDoc = await PDFLib.PDFDocument.create();
-                    
-                    // Get settings
-                    const pageSize = document.getElementById('pageSize').value;
-                    const fontSize = parseInt(document.getElementById('fontSize').value);
-                    const marginsType = document.getElementById('margins').value;
+                    const pageFormat = document.getElementById('pageFormat').value;
                     
                     // Page dimensions
                     let pageWidth, pageHeight;
-                    switch (pageSize) {
+                    switch (pageFormat) {
                         case 'A4':
-                            pageWidth = 595; pageHeight = 842;
+                            pageWidth = 595;
+                            pageHeight = 842;
                             break;
                         case 'Letter':
-                            pageWidth = 612; pageHeight = 792;
+                            pageWidth = 612;
+                            pageHeight = 792;
                             break;
-                        case 'Legal':
-                            pageWidth = 612; pageHeight = 1008;
+                        case 'slide':
+                            pageWidth = 720;
+                            pageHeight = 540;
                             break;
-                        case 'A3':
-                            pageWidth = 842; pageHeight = 1191;
+                        case 'square':
+                            pageWidth = 600;
+                            pageHeight = 600;
                             break;
                         default:
-                            pageWidth = 595; pageHeight = 842;
+                            pageWidth = 720;
+                            pageHeight = 540;
                     }
 
-                    // Margins
-                    let margin;
-                    switch (marginsType) {
-                        case 'narrow': margin = 36; break;  // 0.5 inch
-                        case 'normal': margin = 72; break;  // 1.0 inch
-                        case 'wide': margin = 108; break;   // 1.5 inch
-                        default: margin = 72;
-                    }
+                    const margin = 40;
+                    const titleFontSize = 24;
+                    const contentFontSize = 12;
+                    const lineHeight = 16;
 
-                    const lineHeight = fontSize * 1.5;
-                    const contentWidth = pageWidth - (margin * 2);
-                    let currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
-                    let yPosition = pageHeight - margin;
-
-                    // Add title
-                    currentPage.drawText(this.documentContent.title, {
-                        x: margin,
-                        y: yPosition,
-                        size: fontSize + 4,
-                        color: PDFLib.rgb(0, 0, 0),
-                    });
-                    yPosition -= (fontSize + 4) * 2;
-
-                    // Process content
-                    for (let i = 0; i < this.documentContent.content.length; i++) {
-                        const item = this.documentContent.content[i];
-                        const progress = ((i + 1) / this.documentContent.content.length) * 100;
+                    for (let i = 0; i < this.slides.length; i++) {
+                        const slide = this.slides[i];
+                        const progress = ((i + 1) / this.slides.length) * 100;
                         progressFill.style.width = progress + '%';
 
-                        const itemFontSize = item.type === 'heading' ? fontSize + 2 : fontSize;
-                        const itemLineHeight = itemFontSize * 1.5;
+                        const page = pdfDoc.addPage([pageWidth, pageHeight]);
+                        let yPosition = pageHeight - margin;
 
-                        // Check if we need a new page
-                        if (yPosition < margin + itemLineHeight) {
-                            currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
-                            yPosition = pageHeight - margin;
-                        }
+                        // Draw slide title
+                        page.drawText(slide.title, {
+                            x: margin,
+                            y: yPosition,
+                            size: titleFontSize,
+                            color: PDFLib.rgb(0, 0, 0),
+                        });
+                        yPosition -= titleFontSize + 20;
 
-                        // Wrap text and draw
-                        const lines = this.wrapText(item.text, contentWidth, itemFontSize);
-                        for (const line of lines) {
-                            if (yPosition < margin + itemLineHeight) {
-                                currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
-                                yPosition = pageHeight - margin;
-                            }
+                        // Draw slide number
+                        page.drawText(`Slide ${slide.number}`, {
+                            x: pageWidth - margin - 100,
+                            y: pageHeight - margin,
+                            size: 10,
+                            color: PDFLib.rgb(0.5, 0.5, 0.5),
+                        });
 
-                            currentPage.drawText(line, {
+                        // Draw content
+                        const contentLines = this.wrapText(slide.content, pageWidth - (margin * 2), contentFontSize);
+                        for (const line of contentLines) {
+                            if (yPosition < margin + lineHeight) break; // Avoid overflow
+
+                            page.drawText(line, {
                                 x: margin,
                                 y: yPosition,
-                                size: itemFontSize,
+                                size: contentFontSize,
                                 color: PDFLib.rgb(0, 0, 0),
                             });
-                            yPosition -= itemLineHeight;
+                            yPosition -= lineHeight;
                         }
 
-                        // Add extra space after headings
-                        if (item.type === 'heading') {
-                            yPosition -= lineHeight * 0.5;
-                        } else {
-                            yPosition -= lineHeight * 0.3;
-                        }
+                        // Draw a border
+                        page.drawRectangle({
+                            x: margin - 10,
+                            y: margin - 10,
+                            width: pageWidth - (margin * 2) + 20,
+                            height: pageHeight - (margin * 2) + 20,
+                            borderColor: PDFLib.rgb(0.8, 0.8, 0.8),
+                            borderWidth: 1,
+                        });
                     }
 
                     const pdfBytes = await pdfDoc.save();
-                    this.downloadPDF(pdfBytes, `${this.documentContent.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+                    this.downloadPDF(pdfBytes, 'powerpoint-presentation.pdf');
 
                     progressContainer.style.display = 'none';
                     this.loading.style.display = 'none';
-                    this.documentPreview.style.display = 'block';
+                    this.slidePreview.style.display = 'block';
                     document.getElementById('convertBtn').disabled = false;
 
-                    this.showToast('Successfully converted Word document to PDF', 'success');
+                    this.showToast(`Successfully converted ${this.slides.length} slides to PDF`, 'success');
                 } catch (error) {
                     console.error('Conversion error:', error);
                     this.showToast('Failed to convert to PDF', 'error');
                     this.loading.style.display = 'none';
-                    this.documentPreview.style.display = 'block';
+                    this.slidePreview.style.display = 'block';
                     document.getElementById('convertBtn').disabled = false;
                     document.getElementById('progressContainer').style.display = 'none';
                 }
@@ -825,6 +800,7 @@
                 const lines = [];
                 let currentLine = '';
                 
+                // Estimate character width (rough approximation)
                 const charWidth = fontSize * 0.6;
                 const maxChars = Math.floor(maxWidth / charWidth);
 
@@ -854,19 +830,8 @@
             }
 
             updateUI(file) {
-                if (this.documentContent) {
-                    document.getElementById('wordCount').textContent = this.documentContent.wordCount;
-                    document.getElementById('pageCount').textContent = Math.ceil(this.documentContent.wordCount / 250); // Rough estimate
-
-                    const statsDiv = document.getElementById('documentStats');
-                    statsDiv.innerHTML = `
-                        <div><span class="label">Words:</span> <span class="value">${this.documentContent.wordCount}</span></div>
-                        <div><span class="label">Paragraphs:</span> <span class="value">${this.documentContent.stats.paragraphs}</span></div>
-                        <div><span class="label">Characters:</span> <span class="value">${this.documentContent.stats.characters}</span></div>
-                        <div><span class="label">File Size:</span> <span class="value">${(file.size / 1024 / 1024).toFixed(1)} MB</span></div>
-                    `;
-                }
-
+                document.getElementById('slideCount').textContent = this.slides.length;
+                document.getElementById('fileSize').textContent = (file.size / 1024 / 1024).toFixed(1);
                 document.getElementById('convertBtn').disabled = false;
             }
 
@@ -886,7 +851,7 @@
 
         // Initialize the converter
         document.addEventListener('DOMContentLoaded', () => {
-            new WordToPDFConverter();
+            new PowerPointToPDFConverter();
         });
     </script>
 </body>
